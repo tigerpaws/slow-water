@@ -78,8 +78,8 @@ async function reportCoverage(site: SiteConfig): Promise<WindowCoverage[]> {
   return coverage;
 }
 
-async function calibrate(site: SiteConfig): Promise<void> {
-  const viewName = Object.keys(site.views)[0];
+async function calibrate(site: SiteConfig, viewFlag?: string): Promise<void> {
+  const viewName = viewFlag ?? Object.keys(site.views)[0];
   const view = site.views[viewName];
   const windows = buildWindows(site.timeRange, site.cadence);
   // Most recent summer-ish window gives the clearest look.
@@ -97,7 +97,7 @@ async function calibrate(site: SiteConfig): Promise<void> {
   });
   const dir = outDir(site);
   fs.mkdirSync(dir, { recursive: true });
-  const file = path.join(dir, "calibration.png");
+  const file = path.join(dir, `calibration-${viewName}.png`);
   fs.writeFileSync(file, png);
   console.log(`Wrote ${file} (${(png.length / 1024).toFixed(0)} KB). PUs spent: ${processingUnitsSpent().toFixed(1)}`);
 }
@@ -169,7 +169,7 @@ async function main() {
   const dir = outDir(site);
 
   if (opts.command === "calibrate") {
-    await calibrate(site);
+    await calibrate(site, opts.views?.[0]);
     return;
   }
 

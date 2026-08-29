@@ -2,7 +2,7 @@
   "id": "doty-ravine",
   "name": "Doty Ravine Preserve",
   "description": "Placer Land Trust preserve north of Lincoln, CA. Process-based restoration (beaver dam analogues + natural beaver recolonization) beginning ~2014 reconnected ~60 acres of floodplain along Doty Ravine, a tributary of Coon Creek.",
-  "center": { "lat": 38.9343, "lon": -121.2709 },
+  "center": { "lat": 38.939, "lon": -121.294 },
   "views": {
     "context": { "widthMeters": 5000, "outputPixels": 1000 },
     "tight": { "widthMeters": 1800, "outputPixels": 720 }
@@ -24,5 +24,5 @@
       "kind": "drought"
     }
   ],
-  "notes": "Center point from OpenStreetMap 'Doty Ravine' stream feature (38.9343, -121.2709); to be verified against a calibration frame before the full fetch."
+  "notes": "Center set on the preserve reach of Doty Ravine: 'off Gladding and Manzanita Roads, near Manzanita Cemetery' (cemetery at 38.9440, -121.3039 per OSM), stream at lat ~38.939 there. Verified against calibration frames 2025-Q3."
 }

@@ -37,7 +37,7 @@ export async function searchScenes(
           exclude: ["geometry", "assets", "links"],
         },
       },
-      "application/json"
+      "application/geo+json"
     );
     const page = (await res.json()) as CatalogResponse;
     for (const f of page.features) {
