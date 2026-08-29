@@ -1,0 +1,28 @@
+{
+  "id": "doty-ravine",
+  "name": "Doty Ravine Preserve",
+  "description": "Placer Land Trust preserve north of Lincoln, CA. Process-based restoration (beaver dam analogues + natural beaver recolonization) beginning ~2014 reconnected ~60 acres of floodplain along Doty Ravine, a tributary of Coon Creek.",
+  "center": { "lat": 38.9343, "lon": -121.2709 },
+  "views": {
+    "context": { "widthMeters": 5000, "outputPixels": 1000 },
+    "tight": { "widthMeters": 1800, "outputPixels": 720 }
+  },
+  "timeRange": { "start": "2016-01-01", "end": "2025-12-31" },
+  "cadence": "seasonal",
+  "maxCloudCoverage": 60,
+  "events": [
+    {
+      "start": "2014-06-01",
+      "end": "2018-10-31",
+      "label": "BDA installation & process-based restoration",
+      "kind": "restoration"
+    },
+    {
+      "start": "2020-06-01",
+      "end": "2022-12-31",
+      "label": "Severe California drought",
+      "kind": "drought"
+    }
+  ],
+  "notes": "Center point from OpenStreetMap 'Doty Ravine' stream feature (38.9343, -121.2709); to be verified against a calibration frame before the full fetch."
+}
