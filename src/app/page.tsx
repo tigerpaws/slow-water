@@ -88,7 +88,7 @@ function NdviChart({
           strokeDasharray="4 3"
         />
       )}
-      <text x={PAD.left} y={PAD.top + ih + 16} fontSize={10} fill="#6fbf73">
+      <text x={W - PAD.right} y={PAD.top + 12} fontSize={10} fill="#6fbf73" textAnchor="end">
         mean NDVI over restoration reach (monthly)
       </text>
     </svg>

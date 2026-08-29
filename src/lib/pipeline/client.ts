@@ -23,15 +23,22 @@ export async function shPost(
   for (let attempt = 0; attempt < 4; attempt++) {
     if (attempt > 0) await sleep(1500 * 2 ** attempt);
     const token = await getAccessToken();
-    const res = await fetch(url, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-        Accept: accept,
-      },
-      body: JSON.stringify(body),
-    });
+    let res: Response;
+    try {
+      res = await fetch(url, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+          Accept: accept,
+        },
+        body: JSON.stringify(body),
+      });
+    } catch (err) {
+      // Network-level failures (closed keep-alive sockets, resets) are retryable.
+      lastError = err instanceof Error ? (err.cause instanceof Error ? err.cause.message : err.message) : String(err);
+      continue;
+    }
     if (res.ok) {
       const pu = Number(res.headers.get("x-processingunits-spent"));
       if (!Number.isNaN(pu)) puSpent += pu;
