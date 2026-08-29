@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import type { Manifest, MonthlyStat, MosaicMode, RenderKind } from "@/lib/pipeline/types";
 
 const KNOWN_SITES = [
@@ -99,8 +99,16 @@ function NdviChart({
   );
 }
 
+const noopSubscribe = () => () => {};
+
 export default function Home() {
-  const [siteId, setSiteId] = useState<string | null>(null);
+  // Site selection comes from ?site=; the site links do full navigations, so
+  // this is stable for the life of the page.
+  const siteId = useSyncExternalStore(
+    noopSubscribe,
+    () => new URLSearchParams(window.location.search).get("site") ?? DEFAULT_SITE,
+    () => DEFAULT_SITE
+  );
   const [manifest, setManifest] = useState<Manifest | null>(null);
   const [stats, setStats] = useState<MonthlyStat[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -112,15 +120,6 @@ export default function Home() {
   const playRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
-    setSiteId(new URLSearchParams(window.location.search).get("site") ?? DEFAULT_SITE);
-  }, []);
-
-  useEffect(() => {
-    if (!siteId) return;
-    setManifest(null);
-    setStats([]);
-    setLoadError(null);
-    setFrameIndex(0);
     fetch(`/timelapses/${siteId}/manifest.json`)
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`${r.status}`))))
       .then((m: Manifest) => {
