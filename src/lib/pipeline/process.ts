@@ -1,5 +1,6 @@
-import { shPost, SH_BASE } from "./client";
+import { shPost } from "./client";
 import { frameEvalscript } from "./evalscripts";
+import type { ShProvider } from "./providers";
 import type { MosaicMode, RenderKind, TimeWindow } from "./types";
 
 export interface FrameRequest {
@@ -12,7 +13,7 @@ export interface FrameRequest {
 }
 
 /** Render one PNG frame via the Process API. */
-export async function fetchFrame(req: FrameRequest): Promise<Buffer> {
+export async function fetchFrame(provider: ShProvider, req: FrameRequest): Promise<Buffer> {
   const dataFilter: Record<string, unknown> = {
     timeRange: {
       from: `${req.window.start}T00:00:00Z`,
@@ -23,7 +24,8 @@ export async function fetchFrame(req: FrameRequest): Promise<Buffer> {
   if (req.mode === "simple") dataFilter.mosaickingOrder = "leastCC";
 
   const res = await shPost(
-    `${SH_BASE}/process`,
+    provider,
+    `/process`,
     {
       input: {
         bounds: {

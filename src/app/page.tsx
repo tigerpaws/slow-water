@@ -3,7 +3,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Manifest, MonthlyStat, MosaicMode, RenderKind } from "@/lib/pipeline/types";
 
-const SITE_ID = "doty-ravine";
+const KNOWN_SITES = [
+  { id: "doty-ravine", label: "Doty Ravine" },
+  { id: "tasmam-koyom", label: "Tásmam Koyóm" },
+];
+const DEFAULT_SITE = KNOWN_SITES[0].id;
 
 const EVENT_COLORS: Record<string, string> = {
   restoration: "rgba(80, 200, 120, 0.18)",
@@ -96,6 +100,7 @@ function NdviChart({
 }
 
 export default function Home() {
+  const [siteId, setSiteId] = useState<string | null>(null);
   const [manifest, setManifest] = useState<Manifest | null>(null);
   const [stats, setStats] = useState<MonthlyStat[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -107,7 +112,16 @@ export default function Home() {
   const playRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
-    fetch(`/timelapses/${SITE_ID}/manifest.json`)
+    setSiteId(new URLSearchParams(window.location.search).get("site") ?? DEFAULT_SITE);
+  }, []);
+
+  useEffect(() => {
+    if (!siteId) return;
+    setManifest(null);
+    setStats([]);
+    setLoadError(null);
+    setFrameIndex(0);
+    fetch(`/timelapses/${siteId}/manifest.json`)
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`${r.status}`))))
       .then((m: Manifest) => {
         setManifest(m);
@@ -118,12 +132,12 @@ export default function Home() {
           setMode(first.mode);
         }
       })
-      .catch(() => setLoadError("No manifest found — run: npx tsx scripts/fetch-timelapse.ts sites/doty-ravine.json"));
-    fetch(`/timelapses/${SITE_ID}/stats.json`)
+      .catch(() => setLoadError(`No manifest found — run: npx tsx scripts/fetch-timelapse.ts sites/${siteId}.json`));
+    fetch(`/timelapses/${siteId}/stats.json`)
       .then((r) => (r.ok ? r.json() : []))
       .then(setStats)
       .catch(() => {});
-  }, []);
+  }, [siteId]);
 
   const variantKey = `${view}-${render}-${mode}`;
   const variant = manifest?.variants[variantKey] ?? null;
@@ -223,6 +237,21 @@ export default function Home() {
       }}
     >
       <div style={{ width: "min(920px, 100%)" }}>
+        <div style={{ display: "flex", gap: 10, marginBottom: 10 }}>
+          {KNOWN_SITES.map((s) => (
+            <a
+              key={s.id}
+              href={`/?site=${s.id}`}
+              style={{
+                color: s.id === siteId ? "#e5e5e5" : "#8a8a8a",
+                fontSize: 13,
+                textDecoration: s.id === siteId ? "underline" : "none",
+              }}
+            >
+              {s.label}
+            </a>
+          ))}
+        </div>
         <h1 style={{ fontSize: 20, margin: 0 }}>{manifest?.site.name ?? "Satellite timelapse"}</h1>
         <p style={{ color: "#9a9a9a", fontSize: 13, marginTop: 4 }}>
           {manifest?.site.description ?? ""}

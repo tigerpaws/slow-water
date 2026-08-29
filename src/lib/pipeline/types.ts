@@ -71,6 +71,8 @@ export interface VariantRecord {
 export interface Manifest {
   site: SiteConfig;
   generatedAt: string;
+  /** Sentinel Hub provider the frames were fetched through (cdse | planet). */
+  provider?: string;
   /** Keyed by `${view}-${render}-${mode}`. */
   variants: Record<string, VariantRecord>;
   processingUnitsSpent?: number;

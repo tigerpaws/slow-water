@@ -12,6 +12,7 @@
  *   all         coverage + frames + stats (default)
  *
  * Flags:
+ *   --provider cdse|planet    (default: cdse)
  *   --views context,tight     (default: all views in the site config)
  *   --renders rgb,ndvi        (default: rgb,ndvi)
  *   --modes composite,simple  (default: composite)
@@ -26,6 +27,7 @@ import { searchScenes, coverageForWindows } from "../src/lib/pipeline/catalog";
 import { fetchFrame } from "../src/lib/pipeline/process";
 import { fetchMonthlyStats } from "../src/lib/pipeline/stats";
 import { processingUnitsSpent } from "../src/lib/pipeline/client";
+import { getProvider, type ShProvider } from "../src/lib/pipeline/providers";
 import type {
   Manifest,
   MosaicMode,
@@ -47,6 +49,7 @@ function parseArgs() {
   return {
     sitePath: positional[0],
     command: positional[1] ?? "all",
+    provider: getProvider(flag("provider")),
     views: flag("views")?.split(","),
     renders: (flag("renders")?.split(",") as RenderKind[]) ?? ["rgb", "ndvi"],
     modes: (flag("modes")?.split(",") as MosaicMode[]) ?? ["composite"],
@@ -58,11 +61,11 @@ function outDir(site: SiteConfig): string {
   return path.join(process.cwd(), "public", "timelapses", site.id);
 }
 
-async function reportCoverage(site: SiteConfig): Promise<WindowCoverage[]> {
+async function reportCoverage(site: SiteConfig, provider: ShProvider): Promise<WindowCoverage[]> {
   const windows = buildWindows(site.timeRange, site.cadence);
   const bbox = bboxAround(site.center, Math.max(...Object.values(site.views).map((v) => v.widthMeters)));
-  console.log(`Searching catalog: ${windows.length} windows, ${site.timeRange.start} → ${site.timeRange.end}`);
-  const scenes = await searchScenes(bbox, site.timeRange.start, site.timeRange.end);
+  console.log(`Searching catalog (${provider.name}): ${windows.length} windows, ${site.timeRange.start} → ${site.timeRange.end}`);
+  const scenes = await searchScenes(provider, bbox, site.timeRange.start, site.timeRange.end);
   const coverage = coverageForWindows(scenes, windows, site.maxCloudCoverage);
 
   console.log(`\n${scenes.length} scenes total. Per-window (after <=${site.maxCloudCoverage}% cloud filter):`);
@@ -78,7 +81,7 @@ async function reportCoverage(site: SiteConfig): Promise<WindowCoverage[]> {
   return coverage;
 }
 
-async function calibrate(site: SiteConfig, viewFlag?: string): Promise<void> {
+async function calibrate(site: SiteConfig, provider: ShProvider, viewFlag?: string): Promise<void> {
   const viewName = viewFlag ?? Object.keys(site.views)[0];
   const view = site.views[viewName];
   const windows = buildWindows(site.timeRange, site.cadence);
@@ -86,8 +89,8 @@ async function calibrate(site: SiteConfig, viewFlag?: string): Promise<void> {
   const window =
     [...windows].reverse().find((w) => Number(w.start.slice(5, 7)) >= 6 && Number(w.start.slice(5, 7)) <= 9) ??
     windows[windows.length - 1];
-  console.log(`Calibration frame: view=${viewName}, window=${window.id}`);
-  const png = await fetchFrame({
+  console.log(`Calibration frame (${provider.name}): view=${viewName}, window=${window.id}`);
+  const png = await fetchFrame(provider, {
     bbox: bboxAround(site.center, view.widthMeters),
     outputPixels: view.outputPixels,
     window,
@@ -104,6 +107,7 @@ async function calibrate(site: SiteConfig, viewFlag?: string): Promise<void> {
 
 async function fetchAllFrames(
   site: SiteConfig,
+  provider: ShProvider,
   coverage: WindowCoverage[],
   opts: { views: string[]; renders: RenderKind[]; modes: MosaicMode[]; force: boolean }
 ): Promise<Record<string, VariantRecord>> {
@@ -129,7 +133,7 @@ async function fetchAllFrames(
           if (!opts.force && fs.existsSync(file)) {
             process.stdout.write("s");
           } else {
-            const png = await fetchFrame({
+            const png = await fetchFrame(provider, {
               bbox,
               outputPixels: view.outputPixels,
               window: c.window,
@@ -169,18 +173,19 @@ async function main() {
   const dir = outDir(site);
 
   if (opts.command === "calibrate") {
-    await calibrate(site, opts.views?.[0]);
+    await calibrate(site, opts.provider, opts.views?.[0]);
     return;
   }
 
-  const coverage = await reportCoverage(site);
+  const coverage = await reportCoverage(site, opts.provider);
   if (opts.command === "coverage") return;
 
   if (opts.command === "frames" || opts.command === "all") {
-    const variants = await fetchAllFrames(site, coverage, { ...opts, views });
+    const variants = await fetchAllFrames(site, opts.provider, coverage, { ...opts, views });
     const manifest: Manifest = {
       site,
       generatedAt: new Date().toISOString(),
+      provider: opts.provider.name,
       variants,
       processingUnitsSpent: processingUnitsSpent(),
     };
@@ -192,6 +197,7 @@ async function main() {
     const statsView = site.views["tight"] ?? site.views[views[0]];
     console.log("\nFetching monthly NDVI/NDWI statistics…");
     const stats = await fetchMonthlyStats(
+      opts.provider,
       bboxAround(site.center, statsView.widthMeters),
       site.timeRange.start,
       site.timeRange.end,

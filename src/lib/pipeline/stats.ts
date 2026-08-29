@@ -1,5 +1,6 @@
-import { shPost, SH_BASE } from "./client";
+import { shPost } from "./client";
 import { STATS_EVALSCRIPT } from "./evalscripts";
+import type { ShProvider } from "./providers";
 import type { MonthlyStat } from "./types";
 
 interface StatsBand {
@@ -26,13 +27,15 @@ interface StatsResponse {
  * clouded come back empty and are skipped.
  */
 export async function fetchMonthlyStats(
+  provider: ShProvider,
   bbox: [number, number, number, number],
   start: string,
   end: string,
   maxCloudCoverage: number
 ): Promise<MonthlyStat[]> {
   const res = await shPost(
-    `${SH_BASE}/statistics`,
+    provider,
+    `/statistics`,
     {
       input: {
         bounds: {

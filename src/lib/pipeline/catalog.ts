@@ -1,4 +1,5 @@
-import { shPost, SH_BASE } from "./client";
+import { shPost } from "./client";
+import type { ShProvider } from "./providers";
 import type { TimeWindow, WindowCoverage } from "./types";
 
 export interface SceneInfo {
@@ -17,6 +18,7 @@ interface CatalogResponse {
 
 /** All Sentinel-2 L2A scenes intersecting the bbox in the date range. */
 export async function searchScenes(
+  provider: ShProvider,
   bbox: [number, number, number, number],
   start: string,
   end: string
@@ -25,7 +27,8 @@ export async function searchScenes(
   let next: number | undefined = undefined;
   do {
     const res = await shPost(
-      `${SH_BASE}/catalog/1.0.0/search`,
+      provider,
+      `/catalog/1.0.0/search`,
       {
         collections: ["sentinel-2-l2a"],
         bbox,

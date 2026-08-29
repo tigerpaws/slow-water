@@ -1,6 +1,5 @@
 import { getAccessToken } from "./auth";
-
-export const SH_BASE = "https://sh.dataspace.copernicus.eu/api/v1";
+import type { ShProvider } from "./providers";
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -11,18 +10,21 @@ export function processingUnitsSpent(): number {
 }
 
 /**
- * Authenticated POST to a Sentinel Hub endpoint with backoff on 429/5xx.
+ * Authenticated POST to a Sentinel Hub endpoint (path relative to the
+ * provider's API base) with backoff on 429/5xx and network-level failures.
  * Returns the raw Response so callers can read binary or JSON bodies.
  */
 export async function shPost(
-  url: string,
+  provider: ShProvider,
+  path: string,
   body: unknown,
   accept: string
 ): Promise<Response> {
+  const url = `${provider.apiBase}${path}`;
   let lastError = "";
   for (let attempt = 0; attempt < 4; attempt++) {
     if (attempt > 0) await sleep(1500 * 2 ** attempt);
-    const token = await getAccessToken();
+    const token = await getAccessToken(provider);
     let res: Response;
     try {
       res = await fetch(url, {
