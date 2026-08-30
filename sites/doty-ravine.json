@@ -10,6 +10,29 @@
   "timeRange": { "start": "2016-01-01", "end": "2025-12-31" },
   "cadence": "seasonal",
   "maxCloudCoverage": 60,
+  "analysisAreas": [
+    {
+      "id": "treatment",
+      "label": "Restored floodplain",
+      "kind": "treatment",
+      "bbox": [-121.298, 38.9367, -121.2908, 38.941],
+      "notes": "The ~60-acre reconnected floodplain west of Gladding Rd (approximate footprint, inferred — replace with parcel/project boundary when available)."
+    },
+    {
+      "id": "control",
+      "label": "Upstream corridor (control)",
+      "kind": "control",
+      "bbox": [-121.2902, 38.9365, -121.2838, 38.9385],
+      "notes": "Riparian corridor east of Gladding Rd, upstream of the floodplain work — same stream, no floodplain reconnection. Verify no PBR occurred here."
+    },
+    {
+      "id": "grassland",
+      "label": "Dry grassland (reference)",
+      "kind": "reference",
+      "bbox": [-121.3027, 38.9325, -121.2957, 38.9359],
+      "notes": "Non-riparian annual grassland south of the corridor; tracks the climate signal so treatment divergence from it is attributable to the water table, not weather."
+    }
+  ],
   "events": [
     {
       "start": "2014-06-01",

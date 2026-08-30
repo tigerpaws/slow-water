@@ -83,6 +83,34 @@ shapes, same evalscripts, zero code changes beyond a provider registry. 112 fram
 - Winter frames at ~1,370 m are snow-covered — expected, and the seasonal cadence
   handles it; summer frames carry the story.
 
+## Addendum (2026-08-29): treatment/control analysis areas
+
+Both sites now carry named analysis areas (treatment / control / reference boxes in the
+site configs), per-area monthly series for NDVI, NDMI (moisture), NBR (burn), and an
+open-water fraction — all computed server-side per area (~250–320 PUs per site) — plus
+area overlays on the frames and a multi-series, metric-switchable chart in the viewer.
+
+What the comparative numbers say:
+
+- **Tásmam Koyóm is the showcase.** All three areas crashed in the 2021 fire (summer
+  NDVI: meadow 0.58→0.37, upper meadow 0.47→0.25, burned forest 0.48→0.27). The
+  treatment meadow rebounded above its pre-fire baseline by 2023 (0.71); the burned
+  forest is stuck near 0.4 and declining (delayed tree mortality). NDMI shows the
+  treatment meadow as the wettest area in every year with the smallest fire-year loss.
+- **Absolute cross-area comparisons mislead.** Doty's "control" (upstream corridor) has
+  *higher* absolute NDVI than the treatment floodplain — mature tree canopy vs. wetland
+  mosaic. Trends and deltas are the honest lens; the app should chart divergence from a
+  baseline year, not raw levels, when comparing areas.
+- **The grassland reference works as intended** — flat 0.21–0.26 every summer at Doty,
+  a clean climate baseline.
+- **Sentinel-2 cannot verify CDFW's "+22% water coverage."** The NDWI>0 open-water
+  fraction reads ~0% in all areas (beaver ponds and channels are sub-pixel at 10–20 m,
+  and often vegetation-covered); the one nonzero reading (2021) is a burn-surface
+  artifact. Water-area claims need sub-meter imagery (NAIP, PlanetScope). NDMI is the
+  workable moisture proxy at Sentinel-2 scale.
+- Area boxes are first-pass, image-derived approximations; several carry explicit
+  "verify with site contacts" notes in the configs.
+
 ## Next steps (in rough order)
 
 1. Polygon AOIs + treatment/control stats (the scientific core).

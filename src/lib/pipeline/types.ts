@@ -19,6 +19,17 @@ export interface SiteConfig {
   maxCloudCoverage: number;
   /** Known events, rendered as annotations on charts and the scrubber. */
   events: SiteEvent[];
+  /** Named sub-areas for comparative statistics (treatment vs control). */
+  analysisAreas?: AnalysisArea[];
+  notes?: string;
+}
+
+export interface AnalysisArea {
+  id: string;
+  label: string;
+  kind: "treatment" | "control" | "reference";
+  /** [minLon, minLat, maxLon, maxLat] in WGS84. */
+  bbox: [number, number, number, number];
   notes?: string;
 }
 
@@ -91,6 +102,18 @@ export interface MonthlyStat {
   ndviMean?: number;
   ndviStDev?: number;
   ndwiMean?: number;
+  /** Vegetation moisture (NDMI, B08/B11). */
+  ndmiMean?: number;
+  /** Normalized Burn Ratio (B08/B12); drops sharply after fire. */
+  nbrMean?: number;
+  /** Fraction of area pixels classified as open water (SCL water or NDWI>0). */
+  waterFraction?: number;
   /** Fraction of AOI pixels that were valid (cloud-free, in-swath). */
   validFraction?: number;
+}
+
+/** stats.json: per-analysis-area monthly series. */
+export interface SiteStats {
+  areas: AnalysisArea[];
+  series: Record<string, MonthlyStat[]>;
 }

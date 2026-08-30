@@ -9,10 +9,7 @@ interface StatsBand {
 
 interface StatsInterval {
   interval: { from: string; to: string };
-  outputs?: {
-    ndvi?: { bands: { B0: StatsBand } };
-    ndwi?: { bands: { B0: StatsBand } };
-  };
+  outputs?: Record<string, { bands: { B0: StatsBand } }>;
   error?: { type: string };
 }
 
@@ -63,8 +60,8 @@ export async function fetchMonthlyStats(
   const body = (await res.json()) as StatsResponse;
   const stats: MonthlyStat[] = [];
   for (const interval of body.data ?? []) {
-    const ndvi = interval.outputs?.ndvi?.bands.B0.stats;
-    const ndwi = interval.outputs?.ndwi?.bands.B0.stats;
+    const band = (id: string) => interval.outputs?.[id]?.bands.B0.stats;
+    const ndvi = band("ndvi");
     if (!ndvi || ndvi.sampleCount === 0) continue;
     const total = ndvi.sampleCount;
     const valid = total - ndvi.noDataCount;
@@ -74,7 +71,10 @@ export async function fetchMonthlyStats(
       to: interval.interval.to.slice(0, 10),
       ndviMean: ndvi.mean,
       ndviStDev: ndvi.stDev,
-      ndwiMean: ndwi?.mean,
+      ndwiMean: band("ndwi")?.mean,
+      ndmiMean: band("ndmi")?.mean,
+      nbrMean: band("nbr")?.mean,
+      waterFraction: band("water")?.mean,
       validFraction: valid / total,
     });
   }

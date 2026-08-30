@@ -10,6 +10,29 @@
   "timeRange": { "start": "2019-01-01", "end": "2025-12-31" },
   "cadence": "seasonal",
   "maxCloudCoverage": 60,
+  "analysisAreas": [
+    {
+      "id": "treatment",
+      "label": "Central meadow (beaver/PBR)",
+      "kind": "treatment",
+      "bbox": [-121.2602, 40.1285, -121.2502, 40.1362],
+      "notes": "Wet meadow complex around the provided coordinates — the beaver release and PBR work area (approximate; verify extent with site contacts)."
+    },
+    {
+      "id": "upper-meadow",
+      "label": "Upper meadow (control)",
+      "kind": "control",
+      "bbox": [-121.2584, 40.1381, -121.2509, 40.1423],
+      "notes": "Meadow reach north of the work area, assumed unworked — verify with site contacts before treating as a strict control."
+    },
+    {
+      "id": "burned-forest",
+      "label": "Burned conifer upland (reference)",
+      "kind": "reference",
+      "bbox": [-121.2484, 40.1318, -121.244, 40.1401],
+      "notes": "East-flank conifer stand burned in the Dixie Fire; shows unassisted post-fire recovery for contrast with the meadow."
+    }
+  ],
   "events": [
     {
       "start": "2019-09-20",

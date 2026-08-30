@@ -29,10 +29,13 @@ import { fetchMonthlyStats } from "../src/lib/pipeline/stats";
 import { processingUnitsSpent } from "../src/lib/pipeline/client";
 import { getProvider, type ShProvider } from "../src/lib/pipeline/providers";
 import type {
+  AnalysisArea,
   Manifest,
+  MonthlyStat,
   MosaicMode,
   RenderKind,
   SiteConfig,
+  SiteStats,
   VariantRecord,
   WindowCoverage,
 } from "../src/lib/pipeline/types";
@@ -195,16 +198,29 @@ async function main() {
 
   if (opts.command === "stats" || opts.command === "all") {
     const statsView = site.views["tight"] ?? site.views[views[0]];
-    console.log("\nFetching monthly NDVI/NDWI statistics…");
-    const stats = await fetchMonthlyStats(
-      opts.provider,
-      bboxAround(site.center, statsView.widthMeters),
-      site.timeRange.start,
-      site.timeRange.end,
-      site.maxCloudCoverage
-    );
+    const areas: AnalysisArea[] = site.analysisAreas ?? [
+      {
+        id: "aoi",
+        label: "Full view",
+        kind: "reference",
+        bbox: bboxAround(site.center, statsView.widthMeters),
+      },
+    ];
+    const series: Record<string, MonthlyStat[]> = {};
+    for (const area of areas) {
+      console.log(`\nFetching monthly statistics for area "${area.id}" (${area.kind})…`);
+      series[area.id] = await fetchMonthlyStats(
+        opts.provider,
+        area.bbox,
+        site.timeRange.start,
+        site.timeRange.end,
+        site.maxCloudCoverage
+      );
+      console.log(`  ${series[area.id].length} monthly points.`);
+    }
+    const stats: SiteStats = { areas, series };
     fs.writeFileSync(path.join(dir, "stats.json"), JSON.stringify(stats, null, 2));
-    console.log(`Wrote stats.json with ${stats.length} monthly points.`);
+    console.log(`Wrote stats.json with ${areas.length} areas.`);
   }
 
   console.log(`\nDone. Total processing units spent this run: ${processingUnitsSpent().toFixed(1)}`);
