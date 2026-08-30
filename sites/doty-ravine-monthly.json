@@ -36,28 +36,36 @@
       "notes": "The ~60-acre reconnected floodplain west of Gladding Rd plus the downstream corridor to the tight frame's west edge, which shows improvement over time (approximate footprint, inferred — replace with parcel/project boundary when available)."
     },
     {
-      "id": "control",
-      "label": "Upstream corridor (control)",
-      "kind": "control",
-      "bbox": [
-        -121.2902,
-        38.9365,
-        -121.2838,
-        38.9385
-      ],
-      "notes": "Riparian corridor east of Gladding Rd, upstream of the floodplain work — same stream, no floodplain reconnection. Verify no PBR occurred here."
-    },
-    {
       "id": "landscape",
       "label": "Whole landscape (reference)",
       "kind": "reference",
-      "bbox": [
-        -121.3034,
-        38.9317,
-        -121.2846,
-        38.9463
+      "polygon": [
+        [
+          -121.3034,
+          38.9317
+        ],
+        [
+          -121.2846,
+          38.9317
+        ],
+        [
+          -121.2846,
+          38.9411
+        ],
+        [
+          -121.2934,
+          38.9411
+        ],
+        [
+          -121.2934,
+          38.9463
+        ],
+        [
+          -121.3034,
+          38.9463
+        ]
       ],
-      "notes": "Nearly the full tight-view extent — grassland, pasture, and corridor together. Tracks the overall climate/drought signal the whole landscape experienced, the baseline the treatment should diverge from."
+      "notes": "Nearly the full tight-view extent minus the irrigated pasture block in the northeast (its artificial greenness would mask the climate signal). Tracks the overall drought/climate signal, the baseline the treatment should diverge from."
     }
   ],
   "events": [

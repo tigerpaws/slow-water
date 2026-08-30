@@ -23,9 +23,27 @@ interface StatsResponse {
  * are excluded through the evalscript's dataMask, so months that are fully
  * clouded come back empty and are skipped.
  */
+export interface StatsBounds {
+  bbox?: [number, number, number, number];
+  polygon?: [number, number][];
+}
+
+function toBounds(area: StatsBounds) {
+  const properties = { crs: "http://www.opengis.net/def/crs/OGC/1.3/CRS84" };
+  if (area.polygon) {
+    const ring = [...area.polygon];
+    const [x0, y0] = ring[0];
+    const [xn, yn] = ring[ring.length - 1];
+    if (x0 !== xn || y0 !== yn) ring.push([x0, y0]);
+    return { geometry: { type: "Polygon", coordinates: [ring] }, properties };
+  }
+  if (!area.bbox) throw new Error("Analysis area needs a bbox or polygon");
+  return { bbox: area.bbox, properties };
+}
+
 export async function fetchMonthlyStats(
   provider: ShProvider,
-  bbox: [number, number, number, number],
+  bounds: StatsBounds,
   start: string,
   end: string,
   maxCloudCoverage: number
@@ -35,10 +53,7 @@ export async function fetchMonthlyStats(
     `/statistics`,
     {
       input: {
-        bounds: {
-          bbox,
-          properties: { crs: "http://www.opengis.net/def/crs/OGC/1.3/CRS84" },
-        },
+        bounds: toBounds(bounds),
         data: [
           {
             type: "sentinel-2-l2a",

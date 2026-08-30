@@ -211,7 +211,7 @@ async function main() {
       console.log(`\nFetching monthly statistics for area "${area.id}" (${area.kind})…`);
       series[area.id] = await fetchMonthlyStats(
         opts.provider,
-        area.bbox,
+        area,
         site.timeRange.start,
         site.timeRange.end,
         site.maxCloudCoverage

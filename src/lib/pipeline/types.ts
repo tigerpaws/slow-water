@@ -28,8 +28,10 @@ export interface AnalysisArea {
   id: string;
   label: string;
   kind: "treatment" | "control" | "reference";
-  /** [minLon, minLat, maxLon, maxLat] in WGS84. */
-  bbox: [number, number, number, number];
+  /** [minLon, minLat, maxLon, maxLat] in WGS84. Provide bbox or polygon. */
+  bbox?: [number, number, number, number];
+  /** Ring of [lon, lat] vertices in WGS84 (closing edge implied). */
+  polygon?: [number, number][];
   notes?: string;
 }
 

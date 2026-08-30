@@ -141,7 +141,20 @@ function StatsChart({
   );
 }
 
-/** Percent-positioned rectangles for analysis areas over the current frame. */
+/** Ring of [lon, lat] vertices for an area (bbox areas become a rectangle ring). */
+function areaRing(area: AnalysisArea): [number, number][] {
+  if (area.polygon) return area.polygon;
+  if (!area.bbox) return [];
+  const [minLon, minLat, maxLon, maxLat] = area.bbox;
+  return [
+    [minLon, minLat],
+    [maxLon, minLat],
+    [maxLon, maxLat],
+    [minLon, maxLat],
+  ];
+}
+
+/** Percent-positioned area outlines (rects or polygons) over the current frame. */
 function AreaOverlay({
   areas,
   viewBbox,
@@ -150,48 +163,55 @@ function AreaOverlay({
   viewBbox: [number, number, number, number];
 }) {
   const [minLon, minLat, maxLon, maxLat] = viewBbox;
-  const lonSpan = maxLon - minLon;
-  const latSpan = maxLat - minLat;
+  const px = (lon: number) => ((lon - minLon) / (maxLon - minLon)) * 100;
+  const py = (lat: number) => ((maxLat - lat) / (maxLat - minLat)) * 100;
   return (
     <>
+      <svg
+        viewBox="0 0 100 100"
+        preserveAspectRatio="none"
+        style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none" }}
+      >
+        {areas.map((area) => {
+          const ring = areaRing(area);
+          if (ring.length === 0) return null;
+          return (
+            <polygon
+              key={area.id}
+              points={ring.map(([lon, lat]) => `${px(lon).toFixed(2)},${py(lat).toFixed(2)}`).join(" ")}
+              fill="none"
+              stroke={AREA_COLORS[area.kind]}
+              strokeWidth={2}
+              strokeDasharray="7 5"
+              vectorEffect="non-scaling-stroke"
+            />
+          );
+        })}
+      </svg>
       {areas.map((area) => {
-        const [aMinLon, aMinLat, aMaxLon, aMaxLat] = area.bbox;
-        const left = ((aMinLon - minLon) / lonSpan) * 100;
-        const top = ((maxLat - aMaxLat) / latSpan) * 100;
-        const width = ((aMaxLon - aMinLon) / lonSpan) * 100;
-        const height = ((aMaxLat - aMinLat) / latSpan) * 100;
-        if (left > 100 || top > 100 || left + width < 0 || top + height < 0) return null;
-        const color = AREA_COLORS[area.kind];
+        const ring = areaRing(area);
+        if (ring.length === 0) return null;
+        const left = Math.min(...ring.map(([lon]) => px(lon)));
+        const top = Math.min(...ring.map(([, lat]) => py(lat)));
+        if (left > 100 || top > 100) return null;
         return (
-          <div
+          <span
             key={area.id}
             style={{
               position: "absolute",
-              left: `${left}%`,
-              top: `${top}%`,
-              width: `${width}%`,
-              height: `${height}%`,
-              border: `2px dashed ${color}`,
-              borderRadius: 4,
+              left: `${Math.max(left, 0)}%`,
+              top: `${Math.max(top, 0)}%`,
+              background: "rgba(0,0,0,0.6)",
+              color: AREA_COLORS[area.kind],
+              fontSize: 11,
+              padding: "1px 5px",
+              borderRadius: 3,
+              whiteSpace: "nowrap",
               pointerEvents: "none",
             }}
           >
-            <span
-              style={{
-                position: "absolute",
-                top: -1,
-                left: -1,
-                background: "rgba(0,0,0,0.6)",
-                color,
-                fontSize: 11,
-                padding: "1px 5px",
-                borderRadius: 3,
-                whiteSpace: "nowrap",
-              }}
-            >
-              {area.label}
-            </span>
-          </div>
+            {area.label}
+          </span>
         );
       })}
     </>
