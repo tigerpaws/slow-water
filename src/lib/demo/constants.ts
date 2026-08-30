@@ -27,6 +27,5 @@ export interface MetricDef {
 export const METRICS: Record<Metric, MetricDef> = {
   ndvi: { label: "NDVI · greenness", short: "NDVI", domain: [0, 0.9], get: (s) => s.ndviMean },
   ndmi: { label: "NDMI · moisture", short: "NDMI", domain: [-0.3, 0.6], get: (s) => s.ndmiMean },
-  water: { label: "Open water", short: "water", domain: [0, 0.4], get: (s) => s.waterFraction, percent: true },
   nbr: { label: "NBR · burn", short: "NBR", domain: [-0.3, 0.8], get: (s) => s.nbrMean },
 };

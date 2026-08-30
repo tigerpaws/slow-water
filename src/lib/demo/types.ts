@@ -6,7 +6,7 @@ import type { AnalysisArea, MonthlyStat, RenderKind, SiteEvent } from "../pipeli
 
 export type Granularity = "quarterly" | "monthly";
 export type ViewName = "context" | "tight";
-export type Metric = "ndvi" | "ndmi" | "water" | "nbr";
+export type Metric = "ndvi" | "ndmi" | "nbr";
 
 export interface DemoWindow {
   id: string;

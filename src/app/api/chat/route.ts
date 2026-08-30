@@ -45,7 +45,7 @@ const viewSpecSchema = z.object({
   chart: z
     .object({
       visible: z.boolean().optional(),
-      metric: z.enum(["ndvi", "ndmi", "water", "nbr"]).optional(),
+      metric: z.enum(["ndvi", "ndmi", "nbr"]).optional(),
       emphasize: z.array(z.string()).optional().describe("area ids to emphasize; [] = all"),
     })
     .optional(),
@@ -172,18 +172,14 @@ ${JSON.stringify(storyDraft ?? "no draft yet")}`;
         description: "Per-year mean of a metric over an analysis area, restricted to given months. Returns real numbers from the site's Sentinel-2 statistics.",
         inputSchema: z.object({
           areaId: z.string(),
-          metric: z.enum(["ndvi", "ndmi", "nbr", "ndwi", "water"]),
+          metric: z.enum(["ndvi", "ndmi", "nbr"]),
           months: z.array(z.number().int().min(1).max(12)).min(1).describe("e.g. [7,8,9] for summer"),
         }),
         execute: async ({ areaId, metric, months }) => {
           const series = site.stats.series[areaId];
           if (!series) return { error: `no area "${areaId}"; areas: ${site.stats.areas.map((a) => a.id).join(", ")}` };
           const pick = (p: (typeof series)[number]) =>
-            metric === "ndvi" ? p.ndviMean
-            : metric === "ndmi" ? p.ndmiMean
-            : metric === "nbr" ? p.nbrMean
-            : metric === "ndwi" ? p.ndwiMean
-            : p.waterFraction;
+            metric === "ndvi" ? p.ndviMean : metric === "ndmi" ? p.ndmiMean : p.nbrMean;
           const byYear: Record<string, number[]> = {};
           for (const p of series) {
             const m = Number(p.from.slice(5, 7));
