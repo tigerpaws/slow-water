@@ -111,6 +111,26 @@ What the comparative numbers say:
 - Area boxes are first-pass, image-derived approximations; several carry explicit
   "verify with site contacts" notes in the configs.
 
+## Addendum (2026-08-29): monthly cadence experiment
+
+Both sites re-fetched at monthly cadence into separate `-monthly` site folders
+(quarterly kept intact), run in parallel on the two providers — Doty via CDSE
+(468 frames, 6,305 PUs), Tásmam via Planet (336 frames, 5,465 PUs). Verdict:
+
+- **Monthly earns its place around events.** The Dixie Fire resolves into three
+  distinct frames — July 2021 (smoke approaching), August (valley shrouded mid-fire),
+  September (fresh char with the green meadow core surviving) — where the quarterly
+  Q3 composite blended all three into mush. The September frame is the single best
+  image of the fire-refugium story.
+- **Coverage held up better than expected**: Tásmam 84/84 months usable; Doty 117/120
+  (three cloudy winters empty). Even January 2023 (atmospheric-river month) composited
+  cleanly from 2–4 scenes.
+- **Cost surprise: monthly ≈ quarterly in total PUs** for the same time span (~6.3k vs
+  ~6.2k at Doty). Composite cost scales with total scenes processed, not window count —
+  each scene is just processed once into whichever window contains it.
+- **App implication**: cadence should be a user-facing dial — monthly (or finer) around
+  events of interest, seasonal for decade-scale trends; the same cached scenes serve both.
+
 ## Next steps (in rough order)
 
 1. Polygon AOIs + treatment/control stats (the scientific core).
