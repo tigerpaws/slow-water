@@ -201,8 +201,9 @@ function AreaOverlay({
 const noopSubscribe = () => () => {};
 
 export default function Home() {
-  // Site selection comes from ?site=; the site links do full navigations, so
-  // this is stable for the life of the page.
+  // Rendering-only site id for the nav highlight. During hydration this is
+  // DEFAULT_SITE (the prerendered value), corrected right after — never use it
+  // to decide what to fetch.
   const siteId = useSyncExternalStore(
     noopSubscribe,
     () => new URLSearchParams(window.location.search).get("site") ?? DEFAULT_SITE,
@@ -221,9 +222,15 @@ export default function Home() {
   const playRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
-    fetch(`/timelapses/${siteId}/manifest.json`)
+    // Read the URL directly: the render-time siteId starts as DEFAULT_SITE
+    // during hydration, and fetching for that value races the real site's
+    // fetch — last response wins and can display the wrong site entirely.
+    const site = new URLSearchParams(window.location.search).get("site") ?? DEFAULT_SITE;
+    let cancelled = false;
+    fetch(`/timelapses/${site}/manifest.json`, { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`${r.status}`))))
       .then((m: Manifest) => {
+        if (cancelled) return;
         setManifest(m);
         const first = Object.values(m.variants)[0];
         if (first) {
@@ -232,16 +239,22 @@ export default function Home() {
           setMode(first.mode);
         }
       })
-      .catch(() => setLoadError(`No manifest found — run: npx tsx scripts/fetch-timelapse.ts sites/${siteId}.json`));
-    fetch(`/timelapses/${siteId}/stats.json`)
+      .catch(() => {
+        if (!cancelled)
+          setLoadError(`No manifest found — run: npx tsx scripts/fetch-timelapse.ts sites/${site}.json`);
+      });
+    fetch(`/timelapses/${site}/stats.json`, { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : null))
       .then((s: SiteStats | MonthlyStat[] | null) => {
-        if (!s) return;
+        if (cancelled || !s) return;
         if (Array.isArray(s)) return; // legacy shape; regenerate with the CLI
         setStats(s);
       })
       .catch(() => {});
-  }, [siteId]);
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const variantKey = `${view}-${render}-${mode}`;
   const variant = manifest?.variants[variantKey] ?? null;
