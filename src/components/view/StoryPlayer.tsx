@@ -3,8 +3,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useExplore } from "@/stores/explore";
-import { getStory } from "@/lib/demo/stories";
+import { useExplore, newId } from "@/stores/explore";
+import { getStory, isDemoStory } from "@/lib/demo/stories";
 import { windowIndex, windowsFor } from "@/lib/demo/load";
 import type { Story } from "@/lib/demo/types";
 import { useBoxSize } from "@/lib/useBoxSize";
@@ -94,7 +94,12 @@ export default function StoryPlayer({ storyId }: { storyId: string }) {
 
   const openInExplore = () => {
     if (!story) return;
-    useExplore.getState().setStory(story);
+    // Demo stories are read-only: editing forks a copy with its own id, so a
+    // save never collides with (or is shadowed by) the demo's URL.
+    const draft = isDemoStory(story.id)
+      ? { ...story, id: newId("story"), title: `${story.title} (copy)` }
+      : story;
+    useExplore.getState().setStory(draft);
     router.push(`/explore/${story.siteId}`);
   };
 
