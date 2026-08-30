@@ -54,3 +54,14 @@ Findings from the validation phase are in `docs/spike-findings.md`.
 ## Deploy
 
 Standard Next.js on Vercel; set `ANTHROPIC_API_KEY` as an environment variable.
+
+## Tests
+
+```
+npm test
+```
+
+Vitest unit tests cover the pure logic most likely to regress: window/cadence math and
+coverage filtering (`pipeline/lib/*.test.ts`), geo math, demo-data helpers, story
+persistence, and the explore store's rules (live-edit write-through and its view-mode
+safety, capture/duplicate ordering, linked scrubbing, granularity re-anchoring).
