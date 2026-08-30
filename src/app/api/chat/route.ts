@@ -1,4 +1,11 @@
-import { anthropic } from "@ai-sdk/anthropic";
+import { createAnthropic } from "@ai-sdk/anthropic";
+
+// Identity-linked API keys must name the workspace each request acts in.
+const anthropic = createAnthropic({
+  headers: process.env.ANTHROPIC_WORKSPACE_ID
+    ? { "anthropic-workspace-id": process.env.ANTHROPIC_WORKSPACE_ID }
+    : undefined,
+});
 import { convertToModelMessages, stepCountIs, streamText, tool, type UIMessage } from "ai";
 import { z } from "zod";
 import type { DemoSiteManifest, SiteStats, SiteSummary } from "@/lib/demo/types";
