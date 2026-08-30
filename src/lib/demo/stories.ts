@@ -6,6 +6,17 @@ export const DEMO_STORIES = [dotyStory, tasmamStory] as unknown as Story[];
 
 const KEY = "slowwater:stories";
 
+/** Fired on window whenever the saved-story set changes (same-tab). */
+export const STORIES_CHANGED_EVENT = "slowwater:stories-changed";
+
+function notifyChanged(): void {
+  try {
+    window.dispatchEvent(new Event(STORIES_CHANGED_EVENT));
+  } catch {
+    /* ignore */
+  }
+}
+
 function readSaved(): Record<string, Story> {
   if (typeof window === "undefined") return {};
   try {
@@ -24,6 +35,7 @@ export function saveStory(story: Story): void {
     const all = readSaved();
     all[story.id] = story;
     window.localStorage.setItem(KEY, JSON.stringify(all));
+    notifyChanged();
   } catch {
     /* storage unavailable — export/import still works */
   }
@@ -34,6 +46,7 @@ export function deleteStory(id: string): void {
     const all = readSaved();
     delete all[id];
     window.localStorage.setItem(KEY, JSON.stringify(all));
+    notifyChanged();
   } catch {
     /* ignore */
   }

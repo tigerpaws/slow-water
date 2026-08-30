@@ -1,10 +1,18 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useExplore } from "@/stores/explore";
 import { DEMO_SITES } from "@/lib/demo/load";
-import { DEMO_STORIES, exportStory, saveStory } from "@/lib/demo/stories";
+import {
+  DEMO_STORIES,
+  STORIES_CHANGED_EVENT,
+  exportStory,
+  listSavedStories,
+  saveStory,
+} from "@/lib/demo/stories";
+import type { Story } from "@/lib/demo/types";
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
@@ -50,6 +58,19 @@ export default function AppSidebar() {
   const { selectStep, removeStep, moveStep, setStory, setStoryMeta } = useExplore.getState();
   const showDraft = pathname.startsWith("/explore") && !!story;
 
+  const [saved, setSaved] = useState<Story[]>([]);
+  useEffect(() => {
+    const refresh = () => setSaved(listSavedStories());
+    const t = setTimeout(refresh, 0);
+    window.addEventListener(STORIES_CHANGED_EVENT, refresh);
+    window.addEventListener("storage", refresh);
+    return () => {
+      clearTimeout(t);
+      window.removeEventListener(STORIES_CHANGED_EVENT, refresh);
+      window.removeEventListener("storage", refresh);
+    };
+  }, []);
+
   const handlePlay = () => {
     const s = useExplore.getState().story;
     if (!s || s.steps.length === 0) return;
@@ -74,12 +95,23 @@ export default function AppSidebar() {
 
       <Divider />
 
-      <SectionLabel>STORIES</SectionLabel>
+      <SectionLabel>DEMO STORIES</SectionLabel>
       {DEMO_STORIES.map((s) => (
         <NavLink key={s.id} href={`/view/${s.id}`} active={pathname === `/view/${s.id}`}>
           {s.title}
         </NavLink>
       ))}
+
+      {saved.length > 0 && (
+        <>
+          <SectionLabel>YOUR STORIES</SectionLabel>
+          {saved.map((s) => (
+            <NavLink key={s.id} href={`/view/${s.id}`} active={pathname === `/view/${s.id}`}>
+              {s.title}
+            </NavLink>
+          ))}
+        </>
+      )}
 
       <SectionLabel>SITES</SectionLabel>
       {DEMO_SITES.map((s) => (
