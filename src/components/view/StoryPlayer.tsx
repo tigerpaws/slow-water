@@ -92,7 +92,7 @@ export default function StoryPlayer({ storyId }: { storyId: string }) {
     return Math.max(60, Math.min(widthBound, heightBound));
   })();
 
-  const openInExplore = () => {
+  const editStory = () => {
     if (!story) return;
     // Demo stories are read-only: editing forks a copy with its own id, so a
     // save never collides with (or is shadowed by) the demo's URL.
@@ -100,7 +100,7 @@ export default function StoryPlayer({ storyId }: { storyId: string }) {
       ? { ...story, id: newId("story"), title: `${story.title} (copy)` }
       : story;
     useExplore.getState().setStory(draft);
-    router.push(`/explore/${story.siteId}`);
+    router.push(`/edit/${draft.id}`);
   };
 
   if (missing)
@@ -126,8 +126,8 @@ export default function StoryPlayer({ storyId }: { storyId: string }) {
         <span className="mono" style={{ fontSize: 11.5, color: "var(--ink-soft)" }}>
           {site.name}
         </span>
-        <button onClick={openInExplore} style={{ marginLeft: "auto", fontSize: 12 }}>
-          Open in explore
+        <button onClick={editStory} style={{ marginLeft: "auto", fontSize: 12 }}>
+          Edit story
         </button>
       </header>
 

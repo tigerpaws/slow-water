@@ -68,7 +68,8 @@ export default function AppSidebar() {
   const site = useExplore((s) => s.site);
   const selectedStepId = useExplore((s) => s.selectedStepId);
   const { selectStep, moveStep, setStory, setStoryMeta } = useExplore.getState();
-  const showDraft = pathname.startsWith("/explore") && !!story;
+  const editingStoryId = pathname.startsWith("/edit/") ? decodeURIComponent(pathname.split("/")[2] ?? "") : null;
+  const showRail = !!editingStoryId && !!story && story.id === editingStoryId;
   const [savedFlash, setSavedFlash] = useState(false);
 
   const handleSaveClick = () => {
@@ -82,9 +83,11 @@ export default function AppSidebar() {
   const handleClose = () => {
     const s = useExplore.getState().story;
     if (s && s.steps.length > 0 && !isStorySaved(s)) {
-      if (!window.confirm("Close this draft? Unsaved changes will be lost.")) return;
+      if (!window.confirm("Close this story? Unsaved changes will be lost.")) return;
     }
+    const siteId = s?.siteId;
     setStory(null);
+    if (pathname.startsWith("/edit/")) router.push(siteId ? `/explore/${siteId}` : "/");
   };
 
   const [saved, setSaved] = useState<Story[]>([]);
@@ -131,12 +134,21 @@ export default function AppSidebar() {
         </NavLink>
       ))}
 
-      {saved.length > 0 && (
+      {(saved.length > 0 || (showRail && story)) && (
         <>
           <SectionLabel>YOUR STORIES</SectionLabel>
+          {showRail && story && !saved.some((s) => s.id === story.id) && (
+            <NavLink href={`/edit/${story.id}`} active>
+              {story.title} <span style={{ color: "var(--ink-soft)", fontWeight: 400 }}>· unsaved</span>
+            </NavLink>
+          )}
           {saved.map((s) => (
-            <NavLink key={s.id} href={`/view/${s.id}`} active={pathname === `/view/${s.id}`}>
-              {s.title}
+            <NavLink
+              key={s.id}
+              href={`/view/${s.id}`}
+              active={pathname === `/view/${s.id}` || editingStoryId === s.id}
+            >
+              {editingStoryId === s.id && story ? story.title : s.title}
             </NavLink>
           ))}
         </>
@@ -149,10 +161,10 @@ export default function AppSidebar() {
         </NavLink>
       ))}
 
-      {showDraft && story && (
+      {showRail && story && (
         <>
           <Divider />
-          <SectionLabel>STORY DRAFT</SectionLabel>
+          <SectionLabel>STORY EDITOR</SectionLabel>
           <input
             value={story.title}
             onChange={(e) => setStoryMeta({ title: e.target.value })}
