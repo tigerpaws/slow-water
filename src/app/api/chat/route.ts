@@ -170,5 +170,17 @@ ${JSON.stringify(storyDraft ?? "no draft yet")}`;
     },
   });
 
-  return result.toUIMessageStreamResponse();
+  return result.toUIMessageStreamResponse({
+    // Surface actionable errors to the client instead of the SDK's masked
+    // default; provider error messages (bad key, missing workspace id,
+    // overloaded) are safe and tell the user what to fix.
+    onError: (error: unknown) => {
+      if (!process.env.ANTHROPIC_API_KEY) {
+        return "The server has no ANTHROPIC_API_KEY configured — add it to .env.local (or the deployment's env vars) and restart.";
+      }
+      if (error instanceof Error) return error.message;
+      if (typeof error === "string") return error;
+      return "Unexpected chat error — see the server logs.";
+    },
+  });
 }

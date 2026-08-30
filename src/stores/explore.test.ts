@@ -164,3 +164,26 @@ describe("selection", () => {
     expect(s().viewState.panes[0].windowId).toBe("2020-Q1");
   });
 });
+
+describe("scrub-range remapping on granularity change", () => {
+  beforeEach(() => reset());
+
+  it("remaps the selected step's scrub ids by date when the pane granularity changes", () => {
+    const step = s().captureStep();
+    s().setLiveSync(true);
+    s().updateStep(step.id, { scrub: { paneIndex: 0, fromId: "2020-Q2", toId: "2020-Q4" } });
+    s().setPane(0, { granularity: "monthly" });
+    const scrub = s().story!.steps[0].scrub!;
+    expect(scrub.fromId).toBe("2020-05"); // Q2 midpoint ≈ mid-May
+    expect(scrub.toId).toBe("2020-11"); // Q4 midpoint ≈ mid-November
+  });
+
+  it("leaves scrubs on other panes alone", () => {
+    s().setLayout(2);
+    const step = s().captureStep();
+    s().setLiveSync(true);
+    s().updateStep(step.id, { scrub: { paneIndex: 1, fromId: "2020-Q2", toId: "2020-Q4" } });
+    s().setPane(0, { granularity: "monthly" });
+    expect(s().story!.steps[0].scrub).toEqual({ paneIndex: 1, fromId: "2020-Q2", toId: "2020-Q4" });
+  });
+});

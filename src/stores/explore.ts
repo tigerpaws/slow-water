@@ -126,17 +126,37 @@ export const useExplore = create<ExploreStore>((set, get) => ({
   setPane: (index, patch) =>
     set((s) => {
       if (!s.site) return {};
+      const site = s.site;
       const panes = s.viewState.panes.map(clonePane);
       const pane = { ...panes[index], ...patch };
+      const granChanged = !!patch.granularity && patch.granularity !== panes[index].granularity;
+      const oldWindows = windowsFor(site, panes[index].granularity);
       // Changing granularity re-anchors the window to the nearest date.
-      if (patch.granularity && patch.granularity !== panes[index].granularity) {
-        const oldWindows = windowsFor(s.site, panes[index].granularity);
+      if (granChanged) {
         const old = oldWindows[windowIndex(oldWindows, panes[index].windowId)];
-        const next = windowsFor(s.site, patch.granularity as Granularity);
+        const next = windowsFor(site, patch.granularity as Granularity);
         if (old && next.length) pane.windowId = nearestWindow(next, windowMidDate(old)).id;
       }
       panes[index] = pane;
-      return withSync(s, { ...s.viewState, panes });
+      const result = withSync(s, { ...s.viewState, panes });
+      // A selected step's scrub range references window ids in the pane's old
+      // granularity — remap them by date so they can't go stale.
+      if (granChanged && result.story && s.selectedStepId) {
+        const newWindows = windowsFor(site, pane.granularity);
+        if (newWindows.length) {
+          const remap = (id: string) => {
+            const old = oldWindows[windowIndex(oldWindows, id)];
+            return old ? nearestWindow(newWindows, windowMidDate(old)).id : newWindows[0].id;
+          };
+          const steps = result.story.steps.map((st) =>
+            st.id === s.selectedStepId && st.scrub && st.scrub.paneIndex === index
+              ? { ...st, scrub: { ...st.scrub, fromId: remap(st.scrub.fromId), toId: remap(st.scrub.toId) } }
+              : st
+          );
+          return { ...result, story: { ...result.story, steps } };
+        }
+      }
+      return result;
     }),
 
   setActivePane: (index) => set({ activePane: index }),

@@ -5,10 +5,9 @@ import { useExplore } from "@/stores/explore";
 import { METRICS, AREA_COLOR_VAR, EVENT_FILL } from "@/lib/demo/constants";
 import type { Metric } from "@/lib/demo/types";
 import { windowIndex, windowMidDate, windowsFor } from "@/lib/demo/load";
+import { TIME_AXIS, makeTimeScale } from "@/lib/demo/timeAxis";
 
-const W = 900;
-const H = 190;
-const PAD = { left: 46, right: 10, top: 8, bottom: 18 };
+const { W, H, PAD } = TIME_AXIS;
 
 /**
  * Time control + chart in one container sharing one x-geometry: the scrub
@@ -57,12 +56,7 @@ export default function TimePanel({
   if (!chartVisible && !showScrub) return null;
 
   const metric = METRICS[viewState.chart.metric];
-  const t0 = Date.parse(site.timeRange.start);
-  const t1 = Date.parse(site.timeRange.end);
-  const iw = W - PAD.left - PAD.right;
-  const ih = H - PAD.top - PAD.bottom;
-  const x = (ms: number) => PAD.left + ((ms - t0) / (t1 - t0)) * iw;
-  const xFrac = (ms: number) => Math.max(0, Math.min(1, x(ms) / W));
+  const { x, frac: xFrac, ih } = makeTimeScale(site.timeRange);
   const [yMin, yMax] = metric.domain;
   const y = (v: number) => PAD.top + ih - ((Math.min(Math.max(v, yMin), yMax) - yMin) / (yMax - yMin)) * ih;
 
