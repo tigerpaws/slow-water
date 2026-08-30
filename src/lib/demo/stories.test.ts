@@ -54,3 +54,23 @@ describe("story persistence", () => {
     expect(stories.isStorySaved({ ...story, title: "edited" })).toBe(false);
   });
 });
+
+describe("saved-story validation", () => {
+  beforeEach(() => backing.clear());
+
+  it("skips corrupted entries instead of failing the whole list", () => {
+    stories.saveStory(makeStory("story-good"));
+    const raw = JSON.parse(backing.get("slowwater:stories")!);
+    raw["story-bad"] = { id: "story-bad", steps: "not-an-array" };
+    backing.set("slowwater:stories", JSON.stringify(raw));
+    expect(stories.listSavedStories().map((s) => s.id)).toEqual(["story-good"]);
+  });
+
+  it("bundled demo stories satisfy the story schema (parsed at import)", () => {
+    expect(stories.DEMO_STORIES.length).toBeGreaterThan(0);
+    for (const s of stories.DEMO_STORIES) {
+      expect(s.steps.length).toBeGreaterThan(0);
+      expect(s.steps.every((st) => st.viewState.panes.length >= 1)).toBe(true);
+    }
+  });
+});

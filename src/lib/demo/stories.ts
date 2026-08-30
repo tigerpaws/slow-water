@@ -1,8 +1,10 @@
 import type { Story } from "./types";
+import { parseStory, storySchema } from "./schemas";
 import dotyStory from "@/data/stories/doty-ravine.json";
 import tasmamStory from "@/data/stories/tasmam-koyom.json";
 
-export const DEMO_STORIES = [dotyStory, tasmamStory] as unknown as Story[];
+// Validated at module load: a malformed demo story fails tests and the build.
+export const DEMO_STORIES: Story[] = [dotyStory, tasmamStory].map(parseStory);
 
 const KEY = "slowwater:stories";
 
@@ -20,7 +22,15 @@ function notifyChanged(): void {
 function readSaved(): Record<string, Story> {
   if (typeof window === "undefined") return {};
   try {
-    return JSON.parse(window.localStorage.getItem(KEY) ?? "{}");
+    const raw: unknown = JSON.parse(window.localStorage.getItem(KEY) ?? "{}");
+    if (typeof raw !== "object" || raw === null) return {};
+    // Validate per entry so one corrupted story doesn't take the rest down.
+    const out: Record<string, Story> = {};
+    for (const [id, value] of Object.entries(raw)) {
+      const parsed = storySchema.safeParse(value);
+      if (parsed.success) out[id] = parsed.data;
+    }
+    return out;
   } catch {
     return {};
   }

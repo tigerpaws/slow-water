@@ -7,8 +7,17 @@ const anthropic = createAnthropic({
     : undefined,
 });
 import { convertToModelMessages, stepCountIs, streamText, tool, type UIMessage } from "ai";
-import { z } from "zod";
 import type { DemoSiteManifest, SiteStats, SiteSummary } from "@/lib/demo/types";
+import { parseDemoSiteManifest, parseSiteStats, parseSiteSummary } from "@/lib/demo/schemas";
+import {
+  addStepInputSchema,
+  queryStatsInputSchema,
+  removeStepInputSchema,
+  setStoryTitleInputSchema,
+  updateStepInputSchema,
+  viewSpecSchema,
+  type QueryStatsOutput,
+} from "@/lib/chat/schemas";
 import dotyManifest from "../../../../public/demo/doty-ravine/manifest.json";
 import dotySummary from "../../../../public/demo/doty-ravine/summary.json";
 import dotyStats from "../../../../public/demo/doty-ravine/stats.json";
@@ -18,38 +27,20 @@ import tasmamStats from "../../../../public/demo/tasmam-koyom/stats.json";
 
 export const maxDuration = 60;
 
+// Validated once at module load — a malformed dataset fails the build/boot,
+// not a user request.
 const SITES: Record<string, { manifest: DemoSiteManifest; summary: SiteSummary; stats: SiteStats }> = {
   "doty-ravine": {
-    manifest: dotyManifest as unknown as DemoSiteManifest,
-    summary: dotySummary as SiteSummary,
-    stats: dotyStats as unknown as SiteStats,
+    manifest: parseDemoSiteManifest(dotyManifest),
+    summary: parseSiteSummary(dotySummary),
+    stats: parseSiteStats(dotyStats),
   },
   "tasmam-koyom": {
-    manifest: tasmamManifest as unknown as DemoSiteManifest,
-    summary: tasmamSummary as SiteSummary,
-    stats: tasmamStats as unknown as SiteStats,
+    manifest: parseDemoSiteManifest(tasmamManifest),
+    summary: parseSiteSummary(tasmamSummary),
+    stats: parseSiteStats(tasmamStats),
   },
 };
-
-const paneSchema = z.object({
-  view: z.enum(["context", "tight"]).describe("context ≈ 5-6 km wide; tight ≈ 2 km on the worked area"),
-  render: z.enum(["rgb", "ndvi", "ndmi"]).describe("rgb = true color, ndvi = greenness, ndmi = moisture"),
-  granularity: z.enum(["quarterly", "monthly"]),
-  windowId: z.string().describe('e.g. "2021-Q3" (quarterly) or "2021-08" (monthly)'),
-});
-
-const viewSpecSchema = z.object({
-  layout: z.number().int().min(1).max(3).optional().describe("number of side-by-side panes; defaults to panes.length"),
-  panes: z.array(paneSchema).min(1).max(3).optional(),
-  showAreas: z.boolean().optional().describe("draw the analysis-area outlines on the frames"),
-  chart: z
-    .object({
-      visible: z.boolean().optional(),
-      metric: z.enum(["ndvi", "ndmi", "nbr"]).optional(),
-      emphasize: z.array(z.string()).optional().describe("area ids to emphasize; [] = all"),
-    })
-    .optional(),
-});
 
 function siteContext(siteId: string): string {
   const site = SITES[siteId];
@@ -141,46 +132,24 @@ ${JSON.stringify(storyDraft ?? "no draft yet")}`;
       }),
       add_step: tool({
         description: "Append a step to the story draft. Provide the complete view spec the step should show.",
-        inputSchema: z.object({
-          phase: z.string().optional().describe('short label like "Establish", "Stress test", "Limits"'),
-          say: z.string().describe("the narration: one claim, 1–3 sentences"),
-          pointAt: z.string().optional().describe("what the viewer should look at"),
-          facts: z
-            .array(z.object({ text: z.string(), source: z.string().optional() }))
-            .optional(),
-          view: viewSpecSchema.optional().describe("canvas state for this step; defaults to the current canvas"),
-          scrub: z
-            .object({ paneIndex: z.number().int().min(0), fromId: z.string(), toId: z.string() })
-            .optional()
-            .describe("auto-play a window range when the step is shown"),
-        }),
+        inputSchema: addStepInputSchema,
       }),
       update_step: tool({
         description: "Update narration fields of an existing draft step.",
-        inputSchema: z.object({
-          stepId: z.string(),
-          phase: z.string().optional(),
-          say: z.string().optional(),
-          pointAt: z.string().optional(),
-          facts: z.array(z.object({ text: z.string(), source: z.string().optional() })).optional(),
-        }),
+        inputSchema: updateStepInputSchema,
       }),
       remove_step: tool({
         description: "Remove a step from the story draft.",
-        inputSchema: z.object({ stepId: z.string() }),
+        inputSchema: removeStepInputSchema,
       }),
       set_story_title: tool({
         description: "Set the story draft's title. Use a short, specific name (2–6 words) that fits the story being told.",
-        inputSchema: z.object({ title: z.string().min(1).max(80) }),
+        inputSchema: setStoryTitleInputSchema,
       }),
       query_stats: tool({
         description: "Per-year mean of a metric over an analysis area, restricted to given months. Returns real numbers from the site's Sentinel-2 statistics.",
-        inputSchema: z.object({
-          areaId: z.string(),
-          metric: z.enum(["ndvi", "ndmi", "nbr"]),
-          months: z.array(z.number().int().min(1).max(12)).min(1).describe("e.g. [7,8,9] for summer"),
-        }),
-        execute: async ({ areaId, metric, months }) => {
+        inputSchema: queryStatsInputSchema,
+        execute: async ({ areaId, metric, months }): Promise<QueryStatsOutput> => {
           const series = site.stats.series[areaId];
           if (!series) return { error: `no area "${areaId}"; areas: ${site.stats.areas.map((a) => a.id).join(", ")}` };
           const pick = (p: (typeof series)[number]) =>

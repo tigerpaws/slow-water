@@ -2,16 +2,20 @@
 
 import { useRef, useState } from "react";
 import { useChat } from "@ai-sdk/react";
-import { DefaultChatTransport, lastAssistantMessageIsCompleteWithToolCalls } from "ai";
+import {
+  DefaultChatTransport,
+  getToolName,
+  isToolUIPart,
+  lastAssistantMessageIsCompleteWithToolCalls,
+  type UIDataTypes,
+  type UIMessage,
+} from "ai";
 import { useExplore, cloneViewState } from "@/stores/explore";
-import type { PaneState, StoryStep, ViewState } from "@/lib/demo/types";
+import type { ViewState } from "@/lib/demo/types";
+import type { AppUITools, ViewSpec } from "@/lib/chat/schemas";
 
-interface ViewSpec {
-  layout?: number;
-  panes?: PaneState[];
-  showAreas?: boolean;
-  chart?: { visible?: boolean; metric?: ViewState["chart"]["metric"]; emphasize?: string[] };
-}
+/** Chat messages typed by the app's tool set — no casts at the tool boundary. */
+type AppUIMessage = UIMessage<unknown, UIDataTypes, AppUITools>;
 
 /** Merge a (possibly partial) chat-provided view spec onto the current canvas state. */
 function buildViewState(spec: ViewSpec | undefined): ViewState {
@@ -33,51 +37,47 @@ function buildViewState(spec: ViewSpec | undefined): ViewState {
   };
 }
 
-function runClientTool(toolName: string, input: unknown): string {
+type ClientToolCall =
+  | { toolName: "set_view"; input: AppUITools["set_view"]["input"] }
+  | { toolName: "add_step"; input: AppUITools["add_step"]["input"] }
+  | { toolName: "update_step"; input: AppUITools["update_step"]["input"] }
+  | { toolName: "remove_step"; input: AppUITools["remove_step"]["input"] }
+  | { toolName: "set_story_title"; input: AppUITools["set_story_title"]["input"] };
+
+function runClientTool(call: ClientToolCall): string {
   const store = useExplore.getState();
-  if (toolName === "set_view") {
-    store.applyViewState(buildViewState(input as ViewSpec));
-    return "view applied";
+  switch (call.toolName) {
+    case "set_view":
+      store.applyViewState(buildViewState(call.input));
+      return "view applied";
+    case "add_step": {
+      const i = call.input;
+      const viewState = buildViewState(i.view);
+      store.applyViewState(viewState);
+      const step = store.addStep({
+        phase: i.phase,
+        say: i.say,
+        pointAt: i.pointAt,
+        facts: i.facts ?? [],
+        viewState,
+        scrub: i.scrub,
+      });
+      return `added step ${step.id} (#${store.story?.steps.length ?? 0})`;
+    }
+    case "update_step": {
+      const { stepId, ...patch } = call.input;
+      if (!store.story?.steps.some((s) => s.id === stepId)) return `no step "${stepId}"`;
+      store.updateStep(stepId, patch);
+      return `updated ${stepId}`;
+    }
+    case "remove_step":
+      store.removeStep(call.input.stepId);
+      return `removed ${call.input.stepId}`;
+    case "set_story_title":
+      store.ensureStory();
+      store.setStoryMeta({ title: call.input.title });
+      return `title set to "${call.input.title}"`;
   }
-  if (toolName === "add_step") {
-    const i = input as {
-      phase?: string;
-      say: string;
-      pointAt?: string;
-      facts?: { text: string; source?: string }[];
-      view?: ViewSpec;
-      scrub?: StoryStep["scrub"];
-    };
-    const viewState = buildViewState(i.view);
-    store.applyViewState(viewState);
-    const step = store.addStep({
-      phase: i.phase,
-      say: i.say,
-      pointAt: i.pointAt,
-      facts: i.facts ?? [],
-      viewState,
-      scrub: i.scrub,
-    });
-    return `added step ${step.id} (#${(store.story?.steps.length ?? 0)})`;
-  }
-  if (toolName === "update_step") {
-    const { stepId, ...patch } = input as { stepId: string } & Partial<StoryStep>;
-    if (!store.story?.steps.some((s) => s.id === stepId)) return `no step "${stepId}"`;
-    store.updateStep(stepId, patch);
-    return `updated ${stepId}`;
-  }
-  if (toolName === "remove_step") {
-    const { stepId } = input as { stepId: string };
-    store.removeStep(stepId);
-    return `removed ${stepId}`;
-  }
-  if (toolName === "set_story_title") {
-    const { title } = input as { title: string };
-    store.ensureStory();
-    store.setStoryMeta({ title });
-    return `title set to "${title}"`;
-  }
-  return `unknown tool ${toolName}`;
 }
 
 const TOOL_LABELS: Record<string, string> = {
@@ -93,8 +93,8 @@ export default function ChatPanel({ siteId }: { siteId: string }) {
   const [input, setInput] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const { messages, sendMessage, status, addToolOutput, clearError, error } = useChat({
-    transport: new DefaultChatTransport({
+  const { messages, sendMessage, status, addToolOutput, clearError, error } = useChat<AppUIMessage>({
+    transport: new DefaultChatTransport<AppUIMessage>({
       api: "/api/chat",
       prepareSendMessagesRequest: ({ messages }) => {
         const s = useExplore.getState();
@@ -120,14 +120,10 @@ export default function ChatPanel({ siteId }: { siteId: string }) {
     }),
     sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
     onToolCall: ({ toolCall }) => {
-      const { toolName, toolCallId, input: toolInput } = toolCall as unknown as {
-        toolName: string;
-        toolCallId: string;
-        input: unknown;
-      };
-      if (toolName === "query_stats") return; // server-executed
-      const output = runClientTool(toolName, toolInput);
-      addToolOutput({ tool: toolName as never, toolCallId, output: output as never });
+      if (toolCall.dynamic) return;
+      if (toolCall.toolName === "query_stats") return; // server-executed
+      const output = runClientTool(toolCall);
+      addToolOutput({ tool: toolCall.toolName, toolCallId: toolCall.toolCallId, output });
     },
   });
 
@@ -181,9 +177,9 @@ export default function ChatPanel({ siteId }: { siteId: string }) {
                     {part.text}
                   </p>
                 );
-              if (part.type.startsWith("tool-")) {
-                const name = part.type.slice(5);
-                const state = (part as { state?: string }).state;
+              if (isToolUIPart<AppUITools>(part)) {
+                const name = getToolName(part);
+                const state = part.state;
                 return (
                   <div
                     key={i}
