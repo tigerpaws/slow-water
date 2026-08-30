@@ -34,7 +34,8 @@ export default function Home() {
   }, []);
 
   return (
-    <main style={{ maxWidth: 880, margin: "0 auto", padding: "56px 20px 96px" }}>
+    <main style={{ height: "100%", overflowY: "auto" }}>
+      <div style={{ maxWidth: 880, margin: "0 auto", padding: "48px 20px 96px" }}>
       <h1 style={{ fontSize: 34, margin: 0, letterSpacing: "-0.01em" }}>Slow Water</h1>
       <p className="serif" style={{ fontSize: 16.5, color: "var(--ink-soft)", maxWidth: "62ch", marginTop: 8 }}>
         Environmental change, seen from orbit. Explore a decade of satellite imagery over two
@@ -107,6 +108,7 @@ export default function Home() {
         Prototype — two demo sites with Sentinel-2 imagery (ESA Copernicus), processed via Sentinel Hub.
         The full app would fetch any location on demand.
       </p>
+      </div>
     </main>
   );
 }

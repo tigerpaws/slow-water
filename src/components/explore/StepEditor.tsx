@@ -1,6 +1,8 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useExplore, cloneViewState } from "@/stores/explore";
+import { exportStory, saveStory } from "@/lib/demo/stories";
 
 const inputStyle: React.CSSProperties = {
   width: "100%",
@@ -13,12 +15,23 @@ const inputStyle: React.CSSProperties = {
   fontFamily: "inherit",
 };
 
-/** Capture bar + inline editor for the selected story step. */
+/** Story-draft bar: capture, step chips, title, save/play/export — plus the
+ * inline editor for the selected step. */
 export default function StepEditor() {
+  const router = useRouter();
   const story = useExplore((s) => s.story);
   const selectedStepId = useExplore((s) => s.selectedStepId);
-  const { captureStep, updateStep } = useExplore.getState();
+  const { captureStep, updateStep, removeStep, moveStep, selectStep, ensureStory, setStory, setStoryMeta } =
+    useExplore.getState();
   const step = story?.steps.find((st) => st.id === selectedStepId);
+  const stepIndex = story?.steps.findIndex((st) => st.id === selectedStepId) ?? -1;
+
+  const handlePlay = () => {
+    const s = useExplore.getState().story;
+    if (!s || s.steps.length === 0) return;
+    saveStory(s);
+    router.push(`/view/${s.id}`);
+  };
 
   return (
     <div
@@ -26,26 +39,59 @@ export default function StepEditor() {
         background: "var(--panel)",
         border: "1px solid var(--border)",
         borderRadius: 10,
-        padding: 12,
+        padding: 10,
         display: "flex",
         flexDirection: "column",
-        gap: 10,
+        gap: 8,
       }}
     >
-      <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+      <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
         <button onClick={() => captureStep()} style={{ fontWeight: 600 }}>
           + Capture step
         </button>
-        <span style={{ fontSize: 12, color: "var(--ink-soft)" }}>
-          snapshots the current canvas &amp; chart as a story step
-        </span>
-        {step && (
-          <button
-            style={{ marginLeft: "auto", fontSize: 12 }}
-            onClick={() => updateStep(step.id, { viewState: cloneViewState(useExplore.getState().viewState) })}
-          >
-            Update step&apos;s view from canvas
-          </button>
+        {story ? (
+          <>
+            <input
+              value={story.title}
+              onChange={(e) => setStoryMeta({ title: e.target.value })}
+              aria-label="Story title"
+              style={{ ...inputStyle, width: 180, fontWeight: 600 }}
+            />
+            <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+              {story.steps.map((st, i) => (
+                <button
+                  key={st.id}
+                  className={st.id === selectedStepId ? "selected" : undefined}
+                  onClick={() => selectStep(st.id === selectedStepId ? null : st.id)}
+                  title={st.phase || st.say.slice(0, 60) || `step ${i + 1}`}
+                  style={{ padding: "3px 9px", fontSize: 12, fontVariantNumeric: "tabular-nums" }}
+                >
+                  {i + 1}
+                </button>
+              ))}
+            </div>
+            <div style={{ display: "flex", gap: 5, marginLeft: "auto" }}>
+              <button style={{ fontSize: 12 }} onClick={() => story && saveStory(story)}>
+                Save
+              </button>
+              <button style={{ fontSize: 12 }} onClick={handlePlay} disabled={story.steps.length === 0}>
+                Play ▸
+              </button>
+              <button style={{ fontSize: 12 }} onClick={() => story && exportStory(story)}>
+                Export
+              </button>
+              <button style={{ fontSize: 12 }} onClick={() => setStory(null)}>
+                Close
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            <button onClick={() => ensureStory()}>New story</button>
+            <span style={{ fontSize: 12, color: "var(--ink-soft)" }}>
+              capture the canvas as steps, or ask the assistant to draft them
+            </span>
+          </>
         )}
       </div>
 
@@ -60,6 +106,21 @@ export default function StepEditor() {
           }}
         >
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <div style={{ display: "flex", gap: 4 }}>
+              <button style={{ padding: "1px 8px", fontSize: 11 }} onClick={() => moveStep(step.id, -1)} disabled={stepIndex <= 0}>
+                ↑
+              </button>
+              <button
+                style={{ padding: "1px 8px", fontSize: 11 }}
+                onClick={() => moveStep(step.id, 1)}
+                disabled={stepIndex < 0 || stepIndex >= (story?.steps.length ?? 0) - 1}
+              >
+                ↓
+              </button>
+              <button style={{ padding: "1px 8px", fontSize: 11 }} onClick={() => removeStep(step.id)}>
+                delete
+              </button>
+            </div>
             <label style={{ fontSize: 11, color: "var(--ink-soft)" }}>
               PHASE
               <input
@@ -78,6 +139,12 @@ export default function StepEditor() {
                 onChange={(e) => updateStep(step.id, { pointAt: e.target.value })}
               />
             </label>
+            <button
+              style={{ fontSize: 11.5 }}
+              onClick={() => updateStep(step.id, { viewState: cloneViewState(useExplore.getState().viewState) })}
+            >
+              Update view from canvas
+            </button>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             <label style={{ fontSize: 11, color: "var(--ink-soft)" }}>

@@ -107,7 +107,7 @@ export default function StoryPlayer({ storyId }: { storyId: string }) {
   if (!story || !site || !step) return null;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden" }}>
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
       <header
         style={{
           display: "flex",
@@ -117,9 +117,6 @@ export default function StoryPlayer({ storyId }: { storyId: string }) {
           borderBottom: "1px solid var(--border)",
         }}
       >
-        <Link href="/" style={{ textDecoration: "none", fontWeight: 700, fontSize: 14 }}>
-          Slow Water
-        </Link>
         <span style={{ fontSize: 14, fontWeight: 600 }}>{story.title}</span>
         <span className="mono" style={{ fontSize: 11.5, color: "var(--ink-soft)" }}>
           {site.name}

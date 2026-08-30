@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Archivo, Source_Serif_4, IBM_Plex_Mono } from "next/font/google";
+import AppSidebar from "@/components/AppSidebar";
 import "./globals.css";
 
 const sans = Archivo({ variable: "--font-sans", subsets: ["latin"] });
@@ -14,7 +15,10 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${sans.variable} ${serif.variable} ${mono.variable}`}>
-      <body>{children}</body>
+      <body style={{ display: "flex", overflow: "hidden" }}>
+        <AppSidebar />
+        <div style={{ flex: 1, minWidth: 0, height: "100%" }}>{children}</div>
+      </body>
     </html>
   );
 }

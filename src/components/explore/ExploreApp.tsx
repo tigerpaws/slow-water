@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useExplore } from "@/stores/explore";
 import FrameCanvas from "@/components/canvas/FrameCanvas";
 import TimePanel from "@/components/canvas/TimePanel";
-import Sidebar from "./Sidebar";
 import StepEditor from "./StepEditor";
 import ChatPanel from "./ChatPanel";
 
@@ -36,8 +35,7 @@ export default function ExploreApp({ siteId }: { siteId: string }) {
   }, []);
 
   return (
-    <div style={{ display: "flex", height: "100vh", overflow: "hidden" }}>
-      <Sidebar siteId={siteId} />
+    <div style={{ display: "flex", height: "100%", overflow: "hidden" }}>
       <main style={{ flex: 1, minWidth: 0, overflow: "hidden", padding: "12px 18px 14px", display: "flex" }}>
         {error && <p style={{ color: "var(--fire)" }}>{error}</p>}
         {site && (
