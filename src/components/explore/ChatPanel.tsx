@@ -71,6 +71,12 @@ function runClientTool(toolName: string, input: unknown): string {
     store.removeStep(stepId);
     return `removed ${stepId}`;
   }
+  if (toolName === "set_story_title") {
+    const { title } = input as { title: string };
+    store.ensureStory();
+    store.setStoryMeta({ title });
+    return `title set to "${title}"`;
+  }
   return `unknown tool ${toolName}`;
 }
 
@@ -79,6 +85,7 @@ const TOOL_LABELS: Record<string, string> = {
   add_step: "added a step",
   update_step: "updated a step",
   remove_step: "removed a step",
+  set_story_title: "titled the story",
   query_stats: "queried the data",
 };
 

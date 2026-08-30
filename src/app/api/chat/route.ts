@@ -103,6 +103,7 @@ Tool usage:
 - set_view: change what's on the canvas so the user sees what you're describing. Use it liberally while discussing.
 - add_step: append a story step. Provide the full view spec for the step (don't rely on canvas state unless the user just set it up). Keep "say" to 1–3 sentences, vivid but precise.
 - update_step / remove_step: edit the draft (step ids are in CURRENT STORY DRAFT below).
+- set_story_title: give the draft a short, specific title (2–6 words, no generic labels). Whenever you add or edit steps and the draft is untitled ("Untitled story"), ALSO call set_story_title with a title that fits the story being told.
 - query_stats: compute per-year means of a metric over an area for chosen months, from the real data. Use it to back claims with numbers instead of guessing.
 
 Never invent numbers — use the summary table or query_stats. If the user asks for something the data can't show (e.g. individual dams at 10 m), say so and offer the honest alternative.`;
@@ -167,6 +168,10 @@ ${JSON.stringify(storyDraft ?? "no draft yet")}`;
       remove_step: tool({
         description: "Remove a step from the story draft.",
         inputSchema: z.object({ stepId: z.string() }),
+      }),
+      set_story_title: tool({
+        description: "Set the story draft's title. Use a short, specific name (2–6 words) that fits the story being told.",
+        inputSchema: z.object({ title: z.string().min(1).max(80) }),
       }),
       query_stats: tool({
         description: "Per-year mean of a metric over an analysis area, restricted to given months. Returns real numbers from the site's Sentinel-2 statistics.",
