@@ -125,6 +125,9 @@ ${JSON.stringify(storyDraft ?? "no draft yet")}`;
     system,
     messages: await convertToModelMessages(messages),
     stopWhen: stepCountIs(8),
+    // Stream a readable summary of the model's reasoning so the UI can show
+    // progress instead of a bare "thinking…" (default display is omitted).
+    providerOptions: { anthropic: { thinking: { type: "adaptive", display: "summarized" } } },
     tools: {
       set_view: tool({
         description: "Set the canvas: pane layout, per-pane view/render/granularity/window, area overlay, chart state. Executed in the user's browser.",
@@ -171,6 +174,7 @@ ${JSON.stringify(storyDraft ?? "no draft yet")}`;
   });
 
   return result.toUIMessageStreamResponse({
+    sendReasoning: true,
     // Surface actionable errors to the client instead of the SDK's masked
     // default; provider error messages (bad key, missing workspace id,
     // overloaded) are safe and tell the user what to fix.

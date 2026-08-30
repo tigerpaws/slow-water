@@ -177,6 +177,52 @@ export default function ChatPanel({ siteId }: { siteId: string }) {
                     {part.text}
                   </p>
                 );
+              if (part.type === "reasoning") {
+                if (!part.text.trim()) return null;
+                if (part.state === "streaming")
+                  return (
+                    <div key={i} style={{ margin: "3px 0" }}>
+                      <span
+                        className="mono"
+                        style={{ fontSize: 9.5, letterSpacing: "0.08em", color: "var(--accent)" }}
+                      >
+                        THINKING
+                      </span>
+                      <p
+                        style={{
+                          fontSize: 12,
+                          margin: "2px 0 0",
+                          whiteSpace: "pre-wrap",
+                          color: "var(--ink-soft)",
+                          fontStyle: "italic",
+                        }}
+                      >
+                        {part.text}
+                      </p>
+                    </div>
+                  );
+                return (
+                  <details key={i} style={{ margin: "2px 0" }}>
+                    <summary
+                      className="mono"
+                      style={{ fontSize: 10, color: "var(--ink-soft)", cursor: "pointer", listStylePosition: "inside" }}
+                    >
+                      thought process
+                    </summary>
+                    <p
+                      style={{
+                        fontSize: 12,
+                        margin: "4px 0 0",
+                        whiteSpace: "pre-wrap",
+                        color: "var(--ink-soft)",
+                        fontStyle: "italic",
+                      }}
+                    >
+                      {part.text}
+                    </p>
+                  </details>
+                );
+              }
               if (isToolUIPart<AppUITools>(part)) {
                 const name = getToolName(part);
                 const state = part.state;
