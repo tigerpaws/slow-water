@@ -76,6 +76,7 @@
         "showAreas": false,
         "chart": { "visible": true, "metric": "ndvi", "emphasize": [] }
       },
+      "scrub": { "paneIndex": 0, "fromId": "2021-Q3", "toId": "2022-Q3" },
       "say": "One growing season later, the meadow is back — regrown from rootstock the wet soil protected, nearly at pre-fire greenness. The forest can't do that: its canopy is gone for decades, and its line keeps sinking as fire-injured trees keep dying. Same fire, two fates — the difference is water in the ground. And honesty: this rebound is natural meadow resilience, not restoration. The beavers aren't here yet.",
       "pointAt": "The chart: green rebounds to ~0.61; the amber forest line stays down and declines.",
       "facts": [

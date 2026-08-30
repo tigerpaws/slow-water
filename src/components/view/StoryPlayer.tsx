@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useExplore } from "@/stores/explore";
@@ -8,7 +8,7 @@ import { getStory } from "@/lib/demo/stories";
 import { windowIndex, windowsFor } from "@/lib/demo/load";
 import type { Story } from "@/lib/demo/types";
 import FrameCanvas from "@/components/canvas/FrameCanvas";
-import ChartPanel from "@/components/canvas/ChartPanel";
+import TimePanel from "@/components/canvas/TimePanel";
 
 export default function StoryPlayer({ storyId }: { storyId: string }) {
   const router = useRouter();
@@ -16,7 +16,6 @@ export default function StoryPlayer({ storyId }: { storyId: string }) {
   const [missing, setMissing] = useState(false);
   const [stepIdx, setStepIdx] = useState(0);
   const site = useExplore((s) => s.site);
-  const scrubTimer = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Load story + its site (deferred a tick: getStory reads localStorage).
   useEffect(() => {
@@ -34,31 +33,27 @@ export default function StoryPlayer({ storyId }: { storyId: string }) {
 
   const step = story?.steps[stepIdx];
 
-  // Apply the step's view state; run its scrub range if it has one.
+  // Scrub-range window indices for this step, in the scrub pane's windows.
+  const scrubRange = useMemo(() => {
+    if (!step?.scrub || !site) return null;
+    const windows = windowsFor(site, step.viewState.panes[step.scrub.paneIndex].granularity);
+    const from = windowIndex(windows, step.scrub.fromId);
+    const to = windowIndex(windows, step.scrub.toId);
+    return from <= to ? { from, to } : { from: to, to: from };
+  }, [step, site]);
+
+  // Apply the step's view state; auto-play its scrub range if it has one.
   useEffect(() => {
     if (!step || !site) return;
     const store = useExplore.getState();
     store.applyViewState(step.viewState);
-    if (scrubTimer.current) clearInterval(scrubTimer.current);
-    if (step.scrub) {
-      const { paneIndex, fromId, toId } = step.scrub;
-      const windows = windowsFor(site, step.viewState.panes[paneIndex].granularity);
-      let idx = windowIndex(windows, fromId);
-      const endIdx = windowIndex(windows, toId);
-      store.setWindowByIndex(paneIndex, idx);
-      scrubTimer.current = setInterval(() => {
-        idx += 1;
-        if (idx > endIdx) {
-          if (scrubTimer.current) clearInterval(scrubTimer.current);
-          return;
-        }
-        useExplore.getState().setWindowByIndex(paneIndex, idx);
-      }, 380);
+    if (step.scrub && scrubRange) {
+      store.setActivePane(step.scrub.paneIndex);
+      store.setWindowByIndex(step.scrub.paneIndex, scrubRange.from);
+      store.setPlaying(true);
     }
-    return () => {
-      if (scrubTimer.current) clearInterval(scrubTimer.current);
-    };
-  }, [step, site]);
+    return () => useExplore.getState().setPlaying(false);
+  }, [step, site, scrubRange]);
 
   const go = useCallback(
     (delta: number) => {
@@ -118,10 +113,21 @@ export default function StoryPlayer({ storyId }: { storyId: string }) {
         </button>
       </header>
 
-      <main style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "14px 18px" }}>
-        <div style={{ maxWidth: 1000, margin: "0 auto", display: "flex", flexDirection: "column", gap: 12 }}>
+      <main style={{ flex: 1, minHeight: 0, overflow: "hidden", padding: "12px 18px", display: "flex" }}>
+        <div
+          style={{
+            flex: 1,
+            minHeight: 0,
+            maxWidth: 1000,
+            margin: "0 auto",
+            width: "100%",
+            display: "flex",
+            flexDirection: "column",
+            gap: 10,
+          }}
+        >
           <FrameCanvas editable={false} />
-          <ChartPanel editable={false} />
+          <TimePanel editable={false} showScrub={!!step.scrub} range={scrubRange} />
         </div>
       </main>
 

@@ -1,43 +1,19 @@
 "use client";
 
-import { useEffect, useRef } from "react";
 import { useExplore } from "@/stores/explore";
-import { windowIndex, windowsFor } from "@/lib/demo/load";
 import FramePane from "./FramePane";
 
-/** The multi-pane canvas plus scrub bar, driven by the explore store. */
+/** The multi-pane frame area. Time control lives in TimePanel. */
 export default function FrameCanvas({ editable }: { editable: boolean }) {
   const site = useExplore((s) => s.site);
   const viewState = useExplore((s) => s.viewState);
   const activePane = useExplore((s) => s.activePane);
-  const playing = useExplore((s) => s.playing);
-  const { setPane, setActivePane, setLayout, toggleAreas, toggleLinked, setWindowByIndex, setPlaying } =
-    useExplore.getState();
-  const playRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  const pane = viewState.panes[Math.min(activePane, viewState.panes.length - 1)];
-  const windows = site ? windowsFor(site, pane.granularity) : [];
-  const currentIdx = windowIndex(windows, pane.windowId);
-
-  useEffect(() => {
-    if (playing) {
-      playRef.current = setInterval(() => {
-        const s = useExplore.getState();
-        const w = s.site ? windowsFor(s.site, s.viewState.panes[s.activePane].granularity) : [];
-        const idx = windowIndex(w, s.viewState.panes[s.activePane].windowId);
-        if (idx >= w.length - 1) s.setPlaying(false);
-        else s.stepWindow(1);
-      }, 450);
-    }
-    return () => {
-      if (playRef.current) clearInterval(playRef.current);
-    };
-  }, [playing]);
+  const { setPane, setActivePane, setLayout, toggleAreas, toggleLinked } = useExplore.getState();
 
   if (!site) return null;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+    <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", gap: 8 }}>
       {editable && (
         <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
           <span className="mono" style={{ fontSize: 11, color: "var(--ink-soft)", letterSpacing: "0.06em" }}>
@@ -64,7 +40,7 @@ export default function FrameCanvas({ editable }: { editable: boolean }) {
         </div>
       )}
 
-      <div style={{ display: "flex", gap: 10 }}>
+      <div style={{ flex: 1, minHeight: 0, display: "flex", gap: 10 }}>
         {viewState.panes.map((p, i) => (
           <FramePane
             key={i}
@@ -78,27 +54,6 @@ export default function FrameCanvas({ editable }: { editable: boolean }) {
             onChange={(patch) => setPane(i, patch)}
           />
         ))}
-      </div>
-
-      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-        <button onClick={() => setPlaying(!playing)} style={{ minWidth: 64 }}>
-          {playing ? "Pause" : "Play"}
-        </button>
-        <input
-          type="range"
-          min={0}
-          max={Math.max(windows.length - 1, 0)}
-          value={currentIdx}
-          onChange={(e) => {
-            setPlaying(false);
-            setWindowByIndex(activePane, Number(e.target.value));
-          }}
-          style={{ flex: 1 }}
-          aria-label="Time"
-        />
-        <span className="mono" style={{ fontSize: 12, minWidth: 110, textAlign: "right", color: "var(--ink-soft)" }}>
-          {windows[currentIdx]?.label ?? ""}
-        </span>
       </div>
     </div>
   );

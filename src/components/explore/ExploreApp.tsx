@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useExplore } from "@/stores/explore";
 import FrameCanvas from "@/components/canvas/FrameCanvas";
-import ChartPanel from "@/components/canvas/ChartPanel";
+import TimePanel from "@/components/canvas/TimePanel";
 import Sidebar from "./Sidebar";
 import StepEditor from "./StepEditor";
 import ChatPanel from "./ChatPanel";
@@ -38,18 +38,39 @@ export default function ExploreApp({ siteId }: { siteId: string }) {
   return (
     <div style={{ display: "flex", height: "100vh", overflow: "hidden" }}>
       <Sidebar siteId={siteId} />
-      <main style={{ flex: 1, minWidth: 0, overflowY: "auto", padding: "16px 18px 40px" }}>
+      <main style={{ flex: 1, minWidth: 0, overflow: "hidden", padding: "12px 18px 14px", display: "flex" }}>
         {error && <p style={{ color: "var(--fire)" }}>{error}</p>}
         {site && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 12, maxWidth: 1100, margin: "0 auto" }}>
-            <div>
-              <h1 style={{ fontSize: 19, margin: 0 }}>{site.name}</h1>
-              <p style={{ fontSize: 12.5, color: "var(--ink-soft)", margin: "3px 0 0", maxWidth: "72ch" }}>
+          <div
+            style={{
+              flex: 1,
+              minWidth: 0,
+              minHeight: 0,
+              display: "flex",
+              flexDirection: "column",
+              gap: 10,
+              maxWidth: 1100,
+              margin: "0 auto",
+              width: "100%",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "baseline", gap: 10, minWidth: 0 }}>
+              <h1 style={{ fontSize: 18, margin: 0, whiteSpace: "nowrap" }}>{site.name}</h1>
+              <p
+                style={{
+                  fontSize: 12,
+                  color: "var(--ink-soft)",
+                  margin: 0,
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                }}
+              >
                 {site.description}
               </p>
             </div>
             <FrameCanvas editable />
-            <ChartPanel editable />
+            <TimePanel editable />
             <StepEditor />
           </div>
         )}

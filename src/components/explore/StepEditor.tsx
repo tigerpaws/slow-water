@@ -50,7 +50,15 @@ export default function StepEditor() {
       </div>
 
       {step && (
-        <div style={{ display: "grid", gridTemplateColumns: "150px 1fr", gap: 10 }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "150px 1fr",
+            gap: 10,
+            maxHeight: "24vh",
+            overflowY: "auto",
+          }}
+        >
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             <label style={{ fontSize: 11, color: "var(--ink-soft)" }}>
               PHASE
