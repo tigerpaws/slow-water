@@ -138,8 +138,9 @@ export default function StoryPlayer({ storyId }: { storyId: string }) {
           padding: "14px 18px 16px",
         }}
       >
-        <div style={{ maxWidth: 1000, margin: "0 auto", display: "flex", gap: 18, alignItems: "flex-start" }}>
-          <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ maxWidth: 1000, margin: "0 auto", display: "flex", gap: 18, alignItems: "stretch" }}>
+          {/* Fixed height so the canvas doesn't jump between steps; long content scrolls inside. */}
+          <div style={{ flex: 1, minWidth: 0, height: "clamp(180px, 30vh, 280px)", overflowY: "auto" }}>
             {step.phase && (
               <div
                 className="mono"
@@ -148,7 +149,7 @@ export default function StoryPlayer({ storyId }: { storyId: string }) {
                 {step.phase}
               </div>
             )}
-            <p className="serif" style={{ fontSize: 16.5, lineHeight: 1.5, margin: "4px 0 6px", maxWidth: "70ch" }}>
+            <p className="serif" style={{ fontSize: 15.5, lineHeight: 1.45, margin: "4px 0 6px", maxWidth: "75ch" }}>
               {step.say}
             </p>
             {step.pointAt && (
