@@ -44,12 +44,18 @@ export function nearestWindow(windows: DemoWindow[], dateMs: number): DemoWindow
 }
 
 export function defaultViewState(site: DemoSiteManifest): ViewState {
-  const windows = windowsFor(site, "quarterly");
-  const summer = [...windows].reverse().find((w) => w.id.endsWith("Q3")) ?? windows[windows.length - 1];
+  const granularity: Granularity = site.granularities.monthly ? "monthly" : "quarterly";
+  const windows = windowsFor(site, granularity);
+  // Land on the most recent summer window — that's where the signal is.
+  const summer =
+    [...windows].reverse().find((w) => {
+      const month = Number(w.start.slice(5, 7));
+      return month >= 7 && month <= 9;
+    }) ?? windows[windows.length - 1];
   const pane: PaneState = {
     view: "context",
     render: "rgb",
-    granularity: "quarterly",
+    granularity,
     windowId: summer?.id ?? "",
   };
   return {
