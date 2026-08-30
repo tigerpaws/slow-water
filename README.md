@@ -1,44 +1,54 @@
-# satellite
+# Slow Water
 
-A research tool for understanding environmental change through satellite imagery: pick a
-place, a time range, and an intent; get a scrubbable, annotated image sequence plus the
-quantitative series (NDVI, moisture, water) that show whether something real is happening.
+Environmental change, seen from orbit. A prototype app that turns satellite imagery of
+stream-restoration sites into explorable data and step-by-step evidence stories.
 
-**Current status: validation spike.** We're testing the core premise on one site —
-[Doty Ravine Preserve](https://placerlandtrust.org/beavers/), a beaver/process-based stream
-restoration in Placer County, CA — before building the full app.
+**Two modes:**
 
-## Setup
+- **Explore** (`/explore/[siteId]`) — scrub a decade of Sentinel-2 frames (quarterly and
+  monthly granularities; true-color, NDVI greenness, NDMI moisture renders), compare 1–3
+  panes side by side, overlay treatment/control analysis areas, chart per-area metrics,
+  and capture canvas states as story steps. A chat assistant (Claude Sonnet via the
+  Vercel AI SDK) can drive the canvas, query the site's real statistics, and draft steps.
+- **View** (`/view/[storyId]`) — walk through a story step by step: each step restores a
+  canvas state and presents narration, a "look here" pointer, and fact chips.
 
-1. Register a free account at [dataspace.copernicus.eu](https://dataspace.copernicus.eu)
-   (Copernicus Data Space Ecosystem — free tier includes 40k processing units/month).
-2. In the CDSE Dashboard → User Settings → OAuth clients, create a client and copy the ID
-   and secret.
-3. `cp .env.example .env.local` and fill in the credentials.
-4. `npm install`
+**Prototype scope:** two demo sites are checked into the repo (`public/demo/`, ~100MB of
+WebP frames + stats) — [Doty Ravine](https://placerlandtrust.org/beavers/) (Placer County
+beaver/process-based restoration) and Tásmam Koyóm (Humbug Valley — Maidu land return,
+the 2021 Dixie Fire, and CDFW's 2023 beaver release). The full app would fetch imagery
+for any location on demand. Two demo stories ship in `src/data/stories/`; user-created
+stories live in localStorage with JSON export/import.
 
-## Fetch a timelapse
-
-```
-npx tsx scripts/fetch-timelapse.ts sites/doty-ravine.json coverage    # scene availability (cheap)
-npx tsx scripts/fetch-timelapse.ts sites/doty-ravine.json calibrate   # one test frame to verify the AOI
-npx tsx scripts/fetch-timelapse.ts sites/doty-ravine.json             # everything: frames + stats
-```
-
-Frames land in `public/timelapses/<site>/`; the fetch is idempotent (existing frames are
-skipped) to protect the processing-unit quota.
-
-## View it
+## Run it
 
 ```
+npm install
 npm run dev
 ```
 
-Open http://localhost:3000 — scrub the sequence (arrow keys / space work), toggle
-RGB ↔ NDVI and context ↔ tight views, and check the monthly NDVI chart with restoration
-and drought periods annotated.
+For the chat assistant, add to `.env.local`:
 
-## Adding a site
+```
+ANTHROPIC_API_KEY=sk-ant-…
+```
 
-A new use case is a new JSON file in `sites/` (see `src/lib/pipeline/types.ts` for the
-schema) — center point, view widths, time range, cadence, and known events. No code changes.
+## Data pipeline (offline tooling)
+
+The demo data was produced by the scripts in `scripts/` against the Sentinel Hub APIs
+(Copernicus Data Space free tier and/or the commercial service on Planet):
+
+```
+npx tsx scripts/fetch-timelapse.ts sites/<site>.json          # frames + per-area stats
+npx tsx scripts/build-demo-data.ts                            # → public/demo (WebP, manifests)
+```
+
+Site definitions (AOI, views, events, analysis areas) are JSON files in `sites/` — a new
+site is a new file, no code changes. Pipeline credentials go in `.env.local`
+(see `.env.example`). Raw PNG output lands in `public/timelapses/` (gitignored).
+
+Findings from the validation phase are in `docs/spike-findings.md`.
+
+## Deploy
+
+Standard Next.js on Vercel; set `ANTHROPIC_API_KEY` as an environment variable.
