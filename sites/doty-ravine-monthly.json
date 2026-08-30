@@ -1,0 +1,78 @@
+{
+  "id": "doty-ravine-monthly",
+  "name": "Doty Ravine Preserve — monthly",
+  "description": "Placer Land Trust preserve north of Lincoln, CA. Process-based restoration (beaver dam analogues + natural beaver recolonization) beginning ~2014 reconnected ~60 acres of floodplain along Doty Ravine, a tributary of Coon Creek.",
+  "center": {
+    "lat": 38.939,
+    "lon": -121.294
+  },
+  "views": {
+    "context": {
+      "widthMeters": 5000,
+      "outputPixels": 1000
+    },
+    "tight": {
+      "widthMeters": 1800,
+      "outputPixels": 720
+    }
+  },
+  "timeRange": {
+    "start": "2016-01-01",
+    "end": "2025-12-31"
+  },
+  "cadence": "monthly",
+  "maxCloudCoverage": 60,
+  "analysisAreas": [
+    {
+      "id": "treatment",
+      "label": "Restored floodplain",
+      "kind": "treatment",
+      "bbox": [
+        -121.298,
+        38.9367,
+        -121.2908,
+        38.941
+      ],
+      "notes": "The ~60-acre reconnected floodplain west of Gladding Rd (approximate footprint, inferred — replace with parcel/project boundary when available)."
+    },
+    {
+      "id": "control",
+      "label": "Upstream corridor (control)",
+      "kind": "control",
+      "bbox": [
+        -121.2902,
+        38.9365,
+        -121.2838,
+        38.9385
+      ],
+      "notes": "Riparian corridor east of Gladding Rd, upstream of the floodplain work — same stream, no floodplain reconnection. Verify no PBR occurred here."
+    },
+    {
+      "id": "grassland",
+      "label": "Dry grassland (reference)",
+      "kind": "reference",
+      "bbox": [
+        -121.3027,
+        38.9325,
+        -121.2957,
+        38.9359
+      ],
+      "notes": "Non-riparian annual grassland south of the corridor; tracks the climate signal so treatment divergence from it is attributable to the water table, not weather."
+    }
+  ],
+  "events": [
+    {
+      "start": "2014-06-01",
+      "end": "2018-10-31",
+      "label": "BDA installation & process-based restoration",
+      "kind": "restoration"
+    },
+    {
+      "start": "2020-06-01",
+      "end": "2022-12-31",
+      "label": "Severe California drought",
+      "kind": "drought"
+    }
+  ],
+  "notes": "Center set on the preserve reach of Doty Ravine: 'off Gladding and Manzanita Roads, near Manzanita Cemetery' (cemetery at 38.9440, -121.3039 per OSM), stream at lat ~38.939 there. Verified against calibration frames 2025-Q3. Monthly-cadence variant of doty-ravine; same AOI, views, events, and analysis areas."
+}

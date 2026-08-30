@@ -1,0 +1,83 @@
+{
+  "id": "tasmam-koyom-monthly",
+  "name": "Tásmam Koyóm (Humbug Valley) — monthly",
+  "description": "2,325-acre montane meadow valley in Plumas County, ancestral Mountain Maidu land returned to the Maidu Summit Consortium in 2019. Burned in the 2021 Dixie Fire; site of CDFW's first beaver conservation release in ~75 years (Oct 2023), following process-based restoration work.",
+  "center": {
+    "lat": 40.13347,
+    "lon": -121.25661
+  },
+  "views": {
+    "context": {
+      "widthMeters": 6000,
+      "outputPixels": 1000
+    },
+    "tight": {
+      "widthMeters": 2200,
+      "outputPixels": 720
+    }
+  },
+  "timeRange": {
+    "start": "2019-01-01",
+    "end": "2025-12-31"
+  },
+  "cadence": "monthly",
+  "maxCloudCoverage": 60,
+  "analysisAreas": [
+    {
+      "id": "treatment",
+      "label": "Central meadow (beaver/PBR)",
+      "kind": "treatment",
+      "bbox": [
+        -121.2602,
+        40.1285,
+        -121.2502,
+        40.1362
+      ],
+      "notes": "Wet meadow complex around the provided coordinates — the beaver release and PBR work area (approximate; verify extent with site contacts)."
+    },
+    {
+      "id": "upper-meadow",
+      "label": "Upper meadow (control)",
+      "kind": "control",
+      "bbox": [
+        -121.2584,
+        40.1381,
+        -121.2509,
+        40.1423
+      ],
+      "notes": "Meadow reach north of the work area, assumed unworked — verify with site contacts before treating as a strict control."
+    },
+    {
+      "id": "burned-forest",
+      "label": "Burned conifer upland (reference)",
+      "kind": "reference",
+      "bbox": [
+        -121.2484,
+        40.1318,
+        -121.244,
+        40.1401
+      ],
+      "notes": "East-flank conifer stand burned in the Dixie Fire; shows unassisted post-fire recovery for contrast with the meadow."
+    }
+  ],
+  "events": [
+    {
+      "start": "2019-09-20",
+      "label": "Land returned to Maidu Summit Consortium",
+      "kind": "other"
+    },
+    {
+      "start": "2021-07-13",
+      "end": "2021-10-25",
+      "label": "Dixie Fire",
+      "kind": "fire"
+    },
+    {
+      "start": "2023-06-01",
+      "end": "2023-10-18",
+      "label": "PBR work & beaver release (Oct 18, 2023)",
+      "kind": "restoration"
+    }
+  ],
+  "notes": "Center coordinates provided by the user (site contact). Elevation ~1,370 m: expect snow-covered Q1/Q4 frames. Beavers built a 328-ft dam; CDFW reported +22% water coverage by April 2025. Monthly-cadence variant of tasmam-koyom; same AOI, views, events, and analysis areas."
+}

@@ -13,7 +13,9 @@ import type {
 
 const KNOWN_SITES = [
   { id: "doty-ravine", label: "Doty Ravine" },
+  { id: "doty-ravine-monthly", label: "Doty (monthly)" },
   { id: "tasmam-koyom", label: "Tásmam Koyóm" },
+  { id: "tasmam-koyom-monthly", label: "Tásmam (monthly)" },
 ];
 const DEFAULT_SITE = KNOWN_SITES[0].id;
 
