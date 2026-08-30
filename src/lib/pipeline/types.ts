@@ -60,7 +60,7 @@ export interface TimeWindow {
   label: string;
 }
 
-export type RenderKind = "rgb" | "ndvi";
+export type RenderKind = "rgb" | "ndvi" | "ndmi";
 /** "composite" = cloud-masked median across the window; "simple" = least-cloudy mosaic. */
 export type MosaicMode = "composite" | "simple";
 

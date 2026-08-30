@@ -413,7 +413,7 @@ export default function Home() {
             {toggle("view", Object.keys(manifest.site.views), view, (v) => setView(v), (v) =>
               hasVariant(v, render, mode)
             )}
-            {toggle("render", ["rgb", "ndvi"], render, (v) => setRender(v as RenderKind), (r) =>
+            {toggle("render", ["rgb", "ndvi", "ndmi"], render, (v) => setRender(v as RenderKind), (r) =>
               hasVariant(view, r, mode)
             )}
             {stats && (

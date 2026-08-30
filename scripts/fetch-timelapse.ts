@@ -54,7 +54,7 @@ function parseArgs() {
     command: positional[1] ?? "all",
     provider: getProvider(flag("provider")),
     views: flag("views")?.split(","),
-    renders: (flag("renders")?.split(",") as RenderKind[]) ?? ["rgb", "ndvi"],
+    renders: (flag("renders")?.split(",") as RenderKind[]) ?? ["rgb", "ndvi", "ndmi"],
     modes: (flag("modes")?.split(",") as MosaicMode[]) ?? ["composite"],
     force: args.includes("--force"),
   };
@@ -185,15 +185,27 @@ async function main() {
 
   if (opts.command === "frames" || opts.command === "all") {
     const variants = await fetchAllFrames(site, opts.provider, coverage, { ...opts, views });
+    // Merge with any variants from previous runs so a partial fetch
+    // (e.g. --renders ndmi) doesn't drop the others from the manifest.
+    const manifestPath = path.join(dir, "manifest.json");
+    let existingVariants: Record<string, VariantRecord> = {};
+    if (fs.existsSync(manifestPath)) {
+      try {
+        existingVariants = (JSON.parse(fs.readFileSync(manifestPath, "utf8")) as Manifest).variants ?? {};
+      } catch {
+        /* corrupt manifest — rebuild from this run */
+      }
+    }
+    const merged = { ...existingVariants, ...variants };
     const manifest: Manifest = {
       site,
       generatedAt: new Date().toISOString(),
       provider: opts.provider.name,
-      variants,
+      variants: merged,
       processingUnitsSpent: processingUnitsSpent(),
     };
-    fs.writeFileSync(path.join(dir, "manifest.json"), JSON.stringify(manifest, null, 2));
-    console.log(`\nWrote manifest with ${Object.keys(variants).length} variants.`);
+    fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
+    console.log(`\nWrote manifest with ${Object.keys(merged).length} variants (${Object.keys(variants).length} from this run).`);
   }
 
   if (opts.command === "stats" || opts.command === "all") {

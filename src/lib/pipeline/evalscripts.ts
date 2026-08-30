@@ -48,13 +48,25 @@ var NDVI_STOPS = [
   [0.85, [0.02, 0.25, 0.06]]
 ];
 
-function colorizeNdvi(v) {
-  if (v <= NDVI_STOPS[0][0]) return NDVI_STOPS[0][1];
-  for (var i = 1; i < NDVI_STOPS.length; i++) {
-    if (v <= NDVI_STOPS[i][0]) {
-      var t = (v - NDVI_STOPS[i - 1][0]) / (NDVI_STOPS[i][0] - NDVI_STOPS[i - 1][0]);
-      var a = NDVI_STOPS[i - 1][1];
-      var b = NDVI_STOPS[i][1];
+// Fixed NDMI (moisture) color ramp: browns = dry, straw = neutral,
+// teal/blue = moist vegetation and water.
+var NDMI_STOPS = [
+  [-0.5, [0.45, 0.27, 0.16]],
+  [-0.2, [0.72, 0.55, 0.36]],
+  [0.0, [0.85, 0.8, 0.62]],
+  [0.15, [0.55, 0.72, 0.62]],
+  [0.3, [0.22, 0.55, 0.55]],
+  [0.5, [0.1, 0.35, 0.55]],
+  [0.8, [0.04, 0.15, 0.4]]
+];
+
+function colorize(stops, v) {
+  if (v <= stops[0][0]) return stops[0][1];
+  for (var i = 1; i < stops.length; i++) {
+    if (v <= stops[i][0]) {
+      var t = (v - stops[i - 1][0]) / (stops[i][0] - stops[i - 1][0]);
+      var a = stops[i - 1][1];
+      var b = stops[i][1];
       return [
         a[0] + t * (b[0] - a[0]),
         a[1] + t * (b[1] - a[1]),
@@ -62,8 +74,11 @@ function colorizeNdvi(v) {
       ];
     }
   }
-  return NDVI_STOPS[NDVI_STOPS.length - 1][1];
+  return stops[stops.length - 1][1];
 }
+
+function colorizeNdvi(v) { return colorize(NDVI_STOPS, v); }
+function colorizeNdmi(v) { return colorize(NDMI_STOPS, v); }
 `;
 
 const RGB_MEDIAN = `//VERSION=3
@@ -103,6 +118,39 @@ function evaluatePixel(samples) {
     return (s.B08 - s.B04) / (s.B08 + s.B04 + 1e-6);
   });
   return colorizeNdvi(median(ndvis));
+}
+`;
+
+const NDMI_MEDIAN = `//VERSION=3
+function setup() {
+  return {
+    input: [{ bands: ["B08", "B11", "SCL", "dataMask"] }],
+    output: { bands: 3 },
+    mosaicking: "ORBIT"
+  };
+}
+${SHARED_HELPERS}
+function evaluatePixel(samples) {
+  var valid = samples.filter(isValid);
+  if (valid.length === 0) return [0, 0, 0];
+  var ndmis = valid.map(function (s) {
+    return (s.B08 - s.B11) / (s.B08 + s.B11 + 1e-6);
+  });
+  return colorizeNdmi(median(ndmis));
+}
+`;
+
+const NDMI_SIMPLE = `//VERSION=3
+function setup() {
+  return {
+    input: [{ bands: ["B08", "B11", "dataMask"] }],
+    output: { bands: 3 }
+  };
+}
+${SHARED_HELPERS}
+function evaluatePixel(s) {
+  if (s.dataMask !== 1) return [0, 0, 0];
+  return colorizeNdmi((s.B08 - s.B11) / (s.B08 + s.B11 + 1e-6));
 }
 `;
 
@@ -168,6 +216,8 @@ function evaluatePixel(s) {
 `;
 
 export function frameEvalscript(render: RenderKind, mode: MosaicMode): string {
-  if (mode === "composite") return render === "rgb" ? RGB_MEDIAN : NDVI_MEDIAN;
-  return render === "rgb" ? RGB_SIMPLE : NDVI_SIMPLE;
+  if (mode === "composite") {
+    return render === "rgb" ? RGB_MEDIAN : render === "ndvi" ? NDVI_MEDIAN : NDMI_MEDIAN;
+  }
+  return render === "rgb" ? RGB_SIMPLE : render === "ndvi" ? NDVI_SIMPLE : NDMI_SIMPLE;
 }
