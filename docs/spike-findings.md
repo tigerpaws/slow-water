@@ -62,6 +62,27 @@ yellow — the Fairfax-style story, visible to a non-expert in a 20-second scrub
   API, different endpoint) from ~€30/mo; PlanetScope 3 m daily imagery is available
   through the same API as a paid add-on and would resolve individual ponds.
 
+## Addendum (2026-08-29): Tásmam Koyóm via the Planet provider
+
+Second site fetched entirely through commercial Sentinel Hub on the Planet Insights
+Platform (`--provider planet`), validating the paid scale-up path end to end: same API
+shapes, same evalscripts, zero code changes beyond a provider registry. 112 frames +
+83 stat months = 5,521 PUs on the 30-day trial. Notes:
+
+- Planet's migration moved OAuth client creation to the Account app at
+  `insights.planet.com/account` (the API key shown in the UI does NOT work for
+  `services.sentinel-hub.com` — OAuth client credentials are required).
+- The story reads even better than Doty: intact meadow (2019–mid-2021) → Dixie Fire
+  scar (Q3 2021) → meadow recovery outpacing the burned forest around it → beaver-era
+  wetland expansion (2023+). Summer bbox NDVI: 0.63 (2019) → 0.32 (2021) → ~0.5 (2025),
+  with the meadow floor visibly greener than pre-fire while burned uplands stay bare —
+  another argument for polygon stats (meadow vs. burned-forest masks would separate the
+  two signals cleanly).
+- Bbox-mean NDWI does not show the reported +22% water coverage; water needs per-pixel
+  classification (SCL water class or NDWI threshold area), not an AOI mean.
+- Winter frames at ~1,370 m are snow-covered — expected, and the seasonal cadence
+  handles it; summer frames carry the story.
+
 ## Next steps (in rough order)
 
 1. Polygon AOIs + treatment/control stats (the scientific core).
