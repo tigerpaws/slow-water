@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useExplore } from "@/stores/explore";
+import { windowIndex, windowsFor } from "@/lib/demo/load";
 import FrameCanvas from "@/components/canvas/FrameCanvas";
 import TimePanel from "@/components/canvas/TimePanel";
 import StepEditor from "./StepEditor";
@@ -9,7 +10,18 @@ import ChatPanel from "./ChatPanel";
 
 export default function ExploreApp({ siteId }: { siteId: string }) {
   const site = useExplore((s) => s.site);
+  const story = useExplore((s) => s.story);
+  const selectedStepId = useExplore((s) => s.selectedStepId);
   const [error, setError] = useState<string | null>(null);
+
+  const editingStep = story?.steps.find((st) => st.id === selectedStepId);
+  const scrubRange = useMemo(() => {
+    if (!editingStep?.scrub || !site) return null;
+    const windows = windowsFor(site, editingStep.viewState.panes[editingStep.scrub.paneIndex]?.granularity ?? "quarterly");
+    const from = windowIndex(windows, editingStep.scrub.fromId);
+    const to = windowIndex(windows, editingStep.scrub.toId);
+    return from <= to ? { from, to } : { from: to, to: from };
+  }, [editingStep, site]);
 
   useEffect(() => {
     useExplore
@@ -17,6 +29,12 @@ export default function ExploreApp({ siteId }: { siteId: string }) {
       .loadSite(siteId)
       .catch((e: Error) => setError(e.message));
   }, [siteId]);
+
+  // Canvas changes write through to the selected step only in explore mode.
+  useEffect(() => {
+    useExplore.getState().setLiveSync(true);
+    return () => useExplore.getState().setLiveSync(false);
+  }, []);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -67,8 +85,21 @@ export default function ExploreApp({ siteId }: { siteId: string }) {
                 {site.description}
               </p>
             </div>
-            <FrameCanvas editable />
-            <TimePanel editable />
+            <div
+              style={{
+                flex: 1,
+                minHeight: 0,
+                display: "flex",
+                flexDirection: "column",
+                gap: 10,
+                border: editingStep ? "2px solid var(--accent)" : "2px solid transparent",
+                borderRadius: 14,
+                padding: 6,
+              }}
+            >
+              <FrameCanvas editable />
+              <TimePanel editable range={scrubRange} />
+            </div>
             <StepEditor />
           </div>
         )}

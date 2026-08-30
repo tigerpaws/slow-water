@@ -4,15 +4,26 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useExplore } from "@/stores/explore";
-import { DEMO_SITES } from "@/lib/demo/load";
+import { DEMO_SITES, windowIndex, windowsFor } from "@/lib/demo/load";
 import {
   DEMO_STORIES,
   STORIES_CHANGED_EVENT,
   exportStory,
+  isStorySaved,
   listSavedStories,
   saveStory,
 } from "@/lib/demo/stories";
-import type { Story } from "@/lib/demo/types";
+import { framePath } from "@/lib/demo/types";
+import type { DemoSiteManifest, Story, StoryStep } from "@/lib/demo/types";
+
+/** Short mono recipe for a step row: view · render · window (+panes, ▸range). */
+function stepRecipe(site: DemoSiteManifest, step: StoryStep): string {
+  const p = step.viewState.panes[0];
+  const windows = windowsFor(site, p.granularity);
+  const label = windows[windowIndex(windows, p.windowId)]?.label ?? p.windowId;
+  const extra = step.viewState.layout > 1 ? ` +${step.viewState.layout - 1}` : "";
+  return `${p.view} · ${p.render} · ${label}${extra}${step.scrub ? " · ▸" : ""}`;
+}
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
@@ -54,9 +65,27 @@ export default function AppSidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const story = useExplore((s) => s.story);
+  const site = useExplore((s) => s.site);
   const selectedStepId = useExplore((s) => s.selectedStepId);
-  const { selectStep, removeStep, moveStep, setStory, setStoryMeta } = useExplore.getState();
+  const { selectStep, moveStep, setStory, setStoryMeta } = useExplore.getState();
   const showDraft = pathname.startsWith("/explore") && !!story;
+  const [savedFlash, setSavedFlash] = useState(false);
+
+  const handleSaveClick = () => {
+    const s = useExplore.getState().story;
+    if (!s) return;
+    saveStory(s);
+    setSavedFlash(true);
+    setTimeout(() => setSavedFlash(false), 1500);
+  };
+
+  const handleClose = () => {
+    const s = useExplore.getState().story;
+    if (s && s.steps.length > 0 && !isStorySaved(s)) {
+      if (!window.confirm("Close this draft? Unsaved changes will be lost.")) return;
+    }
+    setStory(null);
+  };
 
   const [saved, setSaved] = useState<Story[]>([]);
   useEffect(() => {
@@ -142,43 +171,75 @@ export default function AppSidebar() {
             }}
           />
           <ol style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 3 }}>
-            {story.steps.map((step, i) => (
-              <li key={step.id}>
-                <div
-                  onClick={() => selectStep(step.id === selectedStepId ? null : step.id)}
-                  style={{
-                    display: "flex",
-                    gap: 6,
-                    alignItems: "baseline",
-                    padding: "4px 7px",
-                    borderRadius: 6,
-                    fontSize: 12.5,
-                    cursor: "pointer",
-                    background: step.id === selectedStepId ? "var(--accent-soft)" : "transparent",
-                  }}
-                >
-                  <span className="mono" style={{ color: "var(--ink-soft)", fontSize: 11 }}>
-                    {i + 1}
-                  </span>
-                  <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }}>
-                    {step.phase || step.say.slice(0, 40) || "untitled step"}
-                  </span>
-                </div>
-                {step.id === selectedStepId && (
-                  <div style={{ display: "flex", gap: 4, padding: "2px 7px 4px" }}>
-                    <button style={{ padding: "1px 7px", fontSize: 11 }} onClick={() => moveStep(step.id, -1)}>
-                      ↑
-                    </button>
-                    <button style={{ padding: "1px 7px", fontSize: 11 }} onClick={() => moveStep(step.id, 1)}>
-                      ↓
-                    </button>
-                    <button style={{ padding: "1px 7px", fontSize: 11 }} onClick={() => removeStep(step.id)}>
-                      delete
-                    </button>
+            {story.steps.map((step, i) => {
+              const pane = step.viewState.panes[0];
+              return (
+                <li key={step.id}>
+                  <div
+                    onClick={() => selectStep(step.id === selectedStepId ? null : step.id)}
+                    style={{
+                      display: "flex",
+                      gap: 7,
+                      alignItems: "center",
+                      padding: "4px 7px",
+                      borderRadius: 6,
+                      fontSize: 12.5,
+                      cursor: "pointer",
+                      background: step.id === selectedStepId ? "var(--accent-soft)" : "transparent",
+                    }}
+                  >
+                    <span className="mono" style={{ color: "var(--ink-soft)", fontSize: 11 }}>
+                      {i + 1}
+                    </span>
+                    {site && pane && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={framePath(site.id, pane.granularity, pane.view, pane.render, pane.windowId)}
+                        alt=""
+                        style={{ width: 26, height: 26, objectFit: "cover", borderRadius: 4, flexShrink: 0 }}
+                      />
+                    )}
+                    <span style={{ flex: 1, minWidth: 0 }}>
+                      <span
+                        style={{
+                          display: "block",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {step.phase || step.say.slice(0, 40) || "untitled step"}
+                      </span>
+                      {site && (
+                        <span
+                          className="mono"
+                          style={{
+                            display: "block",
+                            fontSize: 9.5,
+                            color: "var(--ink-soft)",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {stepRecipe(site, step)}
+                        </span>
+                      )}
+                    </span>
                   </div>
-                )}
-              </li>
-            ))}
+                  {step.id === selectedStepId && (
+                    <div style={{ display: "flex", gap: 4, padding: "2px 7px 4px" }}>
+                      <button style={{ padding: "1px 7px", fontSize: 11 }} onClick={() => moveStep(step.id, -1)}>
+                        ↑
+                      </button>
+                      <button style={{ padding: "1px 7px", fontSize: 11 }} onClick={() => moveStep(step.id, 1)}>
+                        ↓
+                      </button>
+                    </div>
+                  )}
+                </li>
+              );
+            })}
           </ol>
           {story.steps.length === 0 && (
             <div style={{ fontSize: 12, color: "var(--ink-soft)", padding: "2px 7px" }}>
@@ -186,8 +247,8 @@ export default function AppSidebar() {
             </div>
           )}
           <div style={{ display: "flex", gap: 5, flexWrap: "wrap", marginTop: 8 }}>
-            <button style={{ fontSize: 12 }} onClick={() => saveStory(story)}>
-              Save
+            <button style={{ fontSize: 12 }} onClick={handleSaveClick}>
+              {savedFlash ? "Saved ✓" : "Save"}
             </button>
             <button style={{ fontSize: 12 }} onClick={handlePlay} disabled={story.steps.length === 0}>
               Play ▸
@@ -195,7 +256,7 @@ export default function AppSidebar() {
             <button style={{ fontSize: 12 }} onClick={() => exportStory(story)}>
               Export
             </button>
-            <button style={{ fontSize: 12 }} onClick={() => setStory(null)}>
+            <button style={{ fontSize: 12 }} onClick={handleClose}>
               Close
             </button>
           </div>

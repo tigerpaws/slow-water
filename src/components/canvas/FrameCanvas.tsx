@@ -32,6 +32,12 @@ export default function FrameCanvas({ editable }: { editable: boolean }) {
           <button className={viewState.showAreas ? "selected" : undefined} onClick={toggleAreas}>
             areas
           </button>
+          <button
+            className={viewState.chart.visible ? "selected" : undefined}
+            onClick={() => useExplore.getState().setChart({ visible: !viewState.chart.visible })}
+          >
+            chart
+          </button>
           {viewState.layout > 1 && (
             <button className={viewState.linkedScrub ? "selected" : undefined} onClick={toggleLinked}>
               linked scrub

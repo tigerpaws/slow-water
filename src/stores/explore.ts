@@ -43,6 +43,9 @@ interface ExploreStore {
   playing: boolean;
   story: Story | null;
   selectedStepId: string | null;
+  /** Explore mode only: canvas changes write through to the selected step. */
+  liveSync: boolean;
+  setLiveSync: (on: boolean) => void;
 
   loadSite: (siteId: string) => Promise<void>;
   setLayout: (layout: 1 | 2 | 3) => void;
@@ -59,12 +62,31 @@ interface ExploreStore {
   ensureStory: () => Story;
   setStory: (story: Story | null) => void;
   captureStep: () => StoryStep;
+  duplicateStep: (id: string) => void;
   addStep: (step: Omit<StoryStep, "id"> & { id?: string }) => StoryStep;
   updateStep: (id: string, patch: Partial<StoryStep>) => void;
   removeStep: (id: string) => void;
   moveStep: (id: string, dir: -1 | 1) => void;
   selectStep: (id: string | null) => void;
   setStoryMeta: (patch: Partial<Pick<Story, "title" | "logline">>) => void;
+}
+
+/**
+ * The live-edit rule: while exploring with a step selected, every canvas
+ * change writes through to that step. Free exploration (no selection, or
+ * outside explore mode) records nothing.
+ */
+function withSync(
+  s: Pick<ExploreStore, "liveSync" | "story" | "selectedStepId">,
+  viewState: ViewState
+): Partial<ExploreStore> {
+  if (s.liveSync && s.story && s.selectedStepId) {
+    const steps = s.story.steps.map((st) =>
+      st.id === s.selectedStepId ? { ...st, viewState: cloneViewState(viewState) } : st
+    );
+    return { viewState, story: { ...s.story, steps } };
+  }
+  return { viewState };
 }
 
 export const useExplore = create<ExploreStore>((set, get) => ({
@@ -81,11 +103,14 @@ export const useExplore = create<ExploreStore>((set, get) => ({
   playing: false,
   story: null,
   selectedStepId: null,
+  liveSync: false,
+  setLiveSync: (on) => set({ liveSync: on }),
 
   loadSite: async (siteId) => {
     const site = await fetchSite(siteId);
     const stats = await fetchStats(siteId);
-    set({ site, stats, viewState: defaultViewState(site), activePane: 0, playing: false });
+    // Entering a site starts in free-exploration mode: no step selected.
+    set({ site, stats, viewState: defaultViewState(site), activePane: 0, playing: false, selectedStepId: null });
   },
 
   setLayout: (layout) =>
@@ -93,7 +118,7 @@ export const useExplore = create<ExploreStore>((set, get) => ({
       const panes = s.viewState.panes.slice(0, layout).map(clonePane);
       while (panes.length < layout) panes.push(clonePane(panes[panes.length - 1] ?? s.viewState.panes[0]));
       return {
-        viewState: { ...s.viewState, layout, panes },
+        ...withSync(s, { ...s.viewState, layout, panes }),
         activePane: Math.min(s.activePane, layout - 1),
       };
     }),
@@ -111,7 +136,7 @@ export const useExplore = create<ExploreStore>((set, get) => ({
         if (old && next.length) pane.windowId = nearestWindow(next, windowMidDate(old)).id;
       }
       panes[index] = pane;
-      return { viewState: { ...s.viewState, panes } };
+      return withSync(s, { ...s.viewState, panes });
     }),
 
   setActivePane: (index) => set({ activePane: index }),
@@ -130,7 +155,7 @@ export const useExplore = create<ExploreStore>((set, get) => ({
       const next = Math.max(0, Math.min(windows.length - 1, idx + delta));
       panes[i].windowId = windows[next].id;
     }
-    set({ viewState: { ...s.viewState, panes } });
+    set(withSync(s, { ...s.viewState, panes }));
   },
 
   setWindowByIndex: (paneIndex, windowIdx) => {
@@ -150,16 +175,16 @@ export const useExplore = create<ExploreStore>((set, get) => ({
         if (w.length) panes[i].windowId = nearestWindow(w, mid).id;
       }
     }
-    set({ viewState: { ...s.viewState, panes } });
+    set(withSync(s, { ...s.viewState, panes }));
   },
 
   setPlaying: (playing) => set({ playing }),
-  toggleAreas: () => set((s) => ({ viewState: { ...s.viewState, showAreas: !s.viewState.showAreas } })),
-  toggleLinked: () => set((s) => ({ viewState: { ...s.viewState, linkedScrub: !s.viewState.linkedScrub } })),
+  toggleAreas: () => set((s) => withSync(s, { ...s.viewState, showAreas: !s.viewState.showAreas })),
+  toggleLinked: () => set((s) => withSync(s, { ...s.viewState, linkedScrub: !s.viewState.linkedScrub })),
   setChart: (patch) =>
-    set((s) => ({ viewState: { ...s.viewState, chart: { ...s.viewState.chart, ...patch } } })),
+    set((s) => withSync(s, { ...s.viewState, chart: { ...s.viewState.chart, ...patch } })),
   applyViewState: (vs) =>
-    set({ viewState: cloneViewState(vs), activePane: 0, playing: false }),
+    set((s) => ({ ...withSync(s, cloneViewState(vs)), activePane: 0, playing: false })),
 
   ensureStory: () => {
     const s = get();
@@ -185,9 +210,31 @@ export const useExplore = create<ExploreStore>((set, get) => ({
       say: "",
       facts: [],
     };
-    set({ story: { ...story, steps: [...story.steps, step] }, selectedStepId: step.id });
+    // Insert after the selected step (authoring mid-story), else append.
+    const steps = [...story.steps];
+    const at = steps.findIndex((st) => st.id === s.selectedStepId);
+    steps.splice(at >= 0 ? at + 1 : steps.length, 0, step);
+    set({ story: { ...story, steps }, selectedStepId: step.id });
     return step;
   },
+
+  duplicateStep: (id) =>
+    set((s) => {
+      if (!s.story) return {};
+      const i = s.story.steps.findIndex((st) => st.id === id);
+      if (i < 0) return {};
+      const src = s.story.steps[i];
+      const copy: StoryStep = {
+        ...src,
+        id: newId("step"),
+        viewState: cloneViewState(src.viewState),
+        facts: src.facts.map((f) => ({ ...f })),
+        scrub: src.scrub ? { ...src.scrub } : undefined,
+      };
+      const steps = [...s.story.steps];
+      steps.splice(i + 1, 0, copy);
+      return { story: { ...s.story, steps }, selectedStepId: copy.id };
+    }),
 
   addStep: (partial) => {
     const story = get().ensureStory();

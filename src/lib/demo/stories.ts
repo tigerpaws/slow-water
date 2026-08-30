@@ -60,6 +60,12 @@ export function isDemoStory(id: string): boolean {
   return DEMO_STORIES.some((s) => s.id === id);
 }
 
+/** True when the story matches its saved copy byte-for-byte. */
+export function isStorySaved(story: Story): boolean {
+  const saved = readSaved()[story.id];
+  return !!saved && JSON.stringify(saved) === JSON.stringify(story);
+}
+
 export function exportStory(story: Story): void {
   const blob = new Blob([JSON.stringify(story, null, 2)], { type: "application/json" });
   const url = URL.createObjectURL(blob);
