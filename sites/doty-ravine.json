@@ -19,6 +19,13 @@
       "notes": "The ~60-acre reconnected floodplain west of Gladding Rd plus the downstream corridor to the tight frame's west edge, which shows improvement over time (approximate footprint, inferred — replace with parcel/project boundary when available)."
     },
     {
+      "id": "control",
+      "label": "Upstream corridor (control)",
+      "kind": "control",
+      "bbox": [-121.2902, 38.9365, -121.2838, 38.9385],
+      "notes": "Riparian corridor east of Gladding Rd, upstream of the floodplain work — same stream, no floodplain reconnection. Distinguishes restoration effect from riparian-corridors-in-general. Verify no PBR occurred here."
+    },
+    {
       "id": "landscape",
       "label": "Whole landscape (reference)",
       "kind": "reference",
