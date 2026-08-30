@@ -7,6 +7,7 @@ import { useExplore } from "@/stores/explore";
 import { getStory } from "@/lib/demo/stories";
 import { windowIndex, windowsFor } from "@/lib/demo/load";
 import type { Story } from "@/lib/demo/types";
+import { useBoxSize } from "@/lib/useBoxSize";
 import FrameCanvas from "@/components/canvas/FrameCanvas";
 import TimePanel from "@/components/canvas/TimePanel";
 
@@ -76,6 +77,21 @@ export default function StoryPlayer({ storyId }: { storyId: string }) {
     return () => window.removeEventListener("keydown", onKey);
   }, [go, router]);
 
+  const [areaRef, areaSize] = useBoxSize<HTMLDivElement>();
+  const [panelRef, panelSize] = useBoxSize<HTMLDivElement>();
+
+  // Exact height for the frame row: the largest square the panes can use,
+  // bounded by width share and by the space left over the time panel — so
+  // frames sit tight above the chart and the pair centers in the viewport.
+  const frameHeight = (() => {
+    if (!step || areaSize.h === 0) return null;
+    const n = step.viewState.layout;
+    const widthBound = (areaSize.w - 10 * (n - 1)) / n;
+    const panelSpace = panelSize.h > 0 ? panelSize.h + 10 : 0;
+    const heightBound = areaSize.h - panelSpace;
+    return Math.max(60, Math.min(widthBound, heightBound));
+  })();
+
   const openInExplore = () => {
     if (!story) return;
     useExplore.getState().setStory(story);
@@ -115,6 +131,7 @@ export default function StoryPlayer({ storyId }: { storyId: string }) {
 
       <main style={{ flex: 1, minHeight: 0, overflow: "hidden", padding: "12px 18px", display: "flex" }}>
         <div
+          ref={areaRef}
           style={{
             flex: 1,
             minHeight: 0,
@@ -123,11 +140,18 @@ export default function StoryPlayer({ storyId }: { storyId: string }) {
             width: "100%",
             display: "flex",
             flexDirection: "column",
+            justifyContent: "center",
             gap: 10,
           }}
         >
-          <FrameCanvas editable={false} />
-          <TimePanel editable={false} showScrub={!!step.scrub} range={scrubRange} />
+          {frameHeight !== null && (
+            <div style={{ height: frameHeight, display: "flex", flexShrink: 0 }}>
+              <FrameCanvas editable={false} />
+            </div>
+          )}
+          <div ref={panelRef}>
+            <TimePanel editable={false} showScrub={!!step.scrub} range={scrubRange} />
+          </div>
         </div>
       </main>
 
