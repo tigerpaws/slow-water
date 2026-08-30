@@ -1,0 +1,126 @@
+{
+  "id": "story-doty-ravine",
+  "siteId": "doty-ravine",
+  "title": "The corridor that ignored the drought",
+  "logline": "Ten years of a beaver-powered floodplain pulling away from a landscape that stayed still.",
+  "steps": [
+    {
+      "id": "d1",
+      "phase": "Establish",
+      "viewState": {
+        "layout": 1,
+        "panes": [{ "view": "context", "render": "rgb", "granularity": "quarterly", "windowId": "2025-Q3" }],
+        "linkedScrub": true,
+        "showAreas": false,
+        "chart": { "visible": false, "metric": "ndvi", "emphasize": [] }
+      },
+      "say": "Sierra foothills northeast of Lincoln, California, in late summer — annual grassland baked gold, and one dark green thread crossing it. That thread is Doty Ravine, where Placer Land Trust began process-based restoration around 2014: human-built beaver dam analogues that resident beavers then took over.",
+      "pointAt": "The riparian thread against the gold.",
+      "facts": [
+        { "text": "~60 ac floodplain reconnected", "source": "Placer Land Trust" },
+        { "text": "BDAs + beavers, 2014–2018", "source": "PLT / USFWS" }
+      ]
+    },
+    {
+      "id": "d2",
+      "phase": "Signature",
+      "viewState": {
+        "layout": 1,
+        "panes": [{ "view": "tight", "render": "rgb", "granularity": "quarterly", "windowId": "2025-Q3" }],
+        "linkedScrub": true,
+        "showAreas": true,
+        "chart": { "visible": false, "metric": "ndvi", "emphasize": ["treatment"] }
+      },
+      "say": "In a Mediterranean climate, everything green in August is telling you where the water is. This corridor isn't irrigated — it's holding winter water in its soil, months into the dry season. That's what beaver dams do: slow water down until the ground absorbs it.",
+      "pointAt": "The treatment outline. The green block top-right is irrigated pasture — not restoration, and excluded from every statistic.",
+      "facts": [{ "text": "green in August with zero irrigation" }]
+    },
+    {
+      "id": "d3",
+      "phase": "Baseline",
+      "viewState": {
+        "layout": 1,
+        "panes": [{ "view": "tight", "render": "ndvi", "granularity": "quarterly", "windowId": "2016-Q3" }],
+        "linkedScrub": true,
+        "showAreas": true,
+        "chart": { "visible": true, "metric": "ndvi", "emphasize": ["treatment"] }
+      },
+      "say": "Rewind to the first summer the satellite record covers. The corridor is there, but thin and broken — pale gaps inside the floodplain, and the downstream reach is barely a line. Restoration began in 2014; Sentinel-2 starts in 2016, so the true before predates the record.",
+      "pointAt": "Gaps in the floodplain; the downstream thread west of it.",
+      "facts": [
+        { "text": "late-summer NDVI 0.39", "source": "2016, treatment area" },
+        { "text": "satellite record starts 2016" }
+      ]
+    },
+    {
+      "id": "d4",
+      "phase": "Change",
+      "viewState": {
+        "layout": 1,
+        "panes": [{ "view": "tight", "render": "ndvi", "granularity": "quarterly", "windowId": "2016-Q1" }],
+        "linkedScrub": true,
+        "showAreas": true,
+        "chart": { "visible": true, "metric": "ndvi", "emphasize": ["treatment"] }
+      },
+      "scrub": { "paneIndex": 0, "fromId": "2016-Q1", "toId": "2025-Q4" },
+      "say": "Now watch ten years in twenty seconds. The floodplain fills in, and the change propagates: the downstream corridor fattens from a thread into a band as the rewetting spreads. Late-summer greenness in the worked corridor climbs about 25% over the decade.",
+      "pointAt": "The downstream reach — the clearest visual change in the sequence.",
+      "facts": [
+        { "text": "NDVI 0.39 → 0.47–0.51", "source": "late summer, treatment" },
+        { "text": "downstream corridor ~3× wider" }
+      ]
+    },
+    {
+      "id": "d5",
+      "phase": "Stress test",
+      "viewState": {
+        "layout": 1,
+        "panes": [{ "view": "tight", "render": "ndvi", "granularity": "quarterly", "windowId": "2021-Q3" }],
+        "linkedScrub": true,
+        "showAreas": true,
+        "chart": { "visible": true, "metric": "ndvi", "emphasize": ["treatment", "landscape"] }
+      },
+      "say": "2020–2022 was a severe statewide drought — the experiment nature ran for us. The whole landscape stayed flat all decade around NDVI 0.30, sagging through the drought. The restored corridor held its gains straight through it. The gap between the two lines is the restoration signal, cleanly separated from the weather.",
+      "pointAt": "The chart: the green line holds through the drought band while the amber landscape line dips.",
+      "facts": [
+        { "text": "landscape 0.30 → 0.33, flat 10 yrs" },
+        { "text": "treatment held 0.44–0.46 in drought" },
+        { "text": "gap grew 0.09 → 0.12–0.16" }
+      ]
+    },
+    {
+      "id": "d6",
+      "phase": "Control",
+      "viewState": {
+        "layout": 1,
+        "panes": [{ "view": "tight", "render": "ndvi", "granularity": "quarterly", "windowId": "2025-Q3" }],
+        "linkedScrub": true,
+        "showAreas": true,
+        "chart": { "visible": true, "metric": "ndvi", "emphasize": ["treatment", "control"] }
+      },
+      "say": "Could this just be riparian corridors doing well this decade? The upstream corridor — same stream, no floodplain reconnection — answers that: it stayed healthy but flat, gaining almost nothing, while the treated reach climbed. Compare the trends, not the absolute levels: the control is mature tree canopy, the treatment a wetland mosaic.",
+      "pointAt": "The control outline east of Gladding Rd; blue line stable while green rises.",
+      "facts": [
+        { "text": "control 0.55 → 0.61, no trend" },
+        { "text": "treatment +0.08–0.12 same period" }
+      ]
+    },
+    {
+      "id": "d7",
+      "phase": "Mechanism + limits",
+      "viewState": {
+        "layout": 1,
+        "panes": [{ "view": "tight", "render": "ndmi", "granularity": "quarterly", "windowId": "2025-Q3" }],
+        "linkedScrub": true,
+        "showAreas": false,
+        "chart": { "visible": true, "metric": "ndmi", "emphasize": ["treatment"] }
+      },
+      "say": "Switch to the moisture render and the mechanism is the picture: in late August the corridor is a deep blue vein of wet soil through bone-dry brown grassland. Dam → slowed water → raised water table → wet soil all summer → green vegetation → drought and fire buffer. Across the West, beaver-dammed corridors lost 19% of their greenness in wildfires versus 51% for undammed ones. Limits, stated plainly: 10 m pixels can't show individual dams, the pre-2014 baseline predates this record, and the treatment boundary is inferred, not surveyed.",
+      "pointAt": "Blue = water in the ground, months into the dry season.",
+      "facts": [
+        { "text": "NDMI 0.06 → 0.11–0.13", "source": "Aug–Sep, treatment" },
+        { "text": "19% vs 51% fire NDVI loss", "source": "Fairfax & Whittle 2020" }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,128 @@
+{
+  "id": "story-tasmam-koyom",
+  "siteId": "tasmam-koyom",
+  "title": "Fire, refuge, and the beavers' return",
+  "logline": "A valley returned, burned, reborn, and re-engineered — every turning point carrying a date.",
+  "steps": [
+    {
+      "id": "t1",
+      "phase": "Establish",
+      "viewState": {
+        "layout": 1,
+        "panes": [{ "view": "context", "render": "rgb", "granularity": "quarterly", "windowId": "2020-Q3" }],
+        "linkedScrub": true,
+        "showAreas": false,
+        "chart": { "visible": false, "metric": "ndvi", "emphasize": [] }
+      },
+      "say": "Humbug Valley — Tásmam Koyóm to the Mountain Maidu — a 2,325-acre montane meadow at 4,500 feet, ringed by conifer forest. On September 20, 2019, after a century in utility ownership, PG&E returned it to the Maidu Summit Consortium. This is the valley one summer into that homecoming.",
+      "pointAt": "The braided wet meadow at center; intact dark forest on every flank — remember how dark it is.",
+      "facts": [{ "text": "2,325 ac returned Sept 20, 2019", "source": "PG&E → Maidu Summit Consortium" }]
+    },
+    {
+      "id": "t2",
+      "phase": "Omen",
+      "viewState": {
+        "layout": 1,
+        "panes": [{ "view": "tight", "render": "rgb", "granularity": "monthly", "windowId": "2021-07" }],
+        "linkedScrub": true,
+        "showAreas": false,
+        "chart": { "visible": false, "metric": "ndvi", "emphasize": [] }
+      },
+      "say": "July 2021. The Dixie Fire ignited on July 13 in the Feather River Canyon, thirty miles away, and grew into the largest single wildfire in California history. The valley is still intact — but smoke is already drifting across the southwest corner. This is the month before.",
+      "pointAt": "Smoke entering lower-left; the meadow still green beneath it.",
+      "facts": [
+        { "text": "Dixie Fire ignited Jul 13, 2021" },
+        { "text": "~963,000 ac — largest single fire in CA history" }
+      ]
+    },
+    {
+      "id": "t3",
+      "phase": "Event",
+      "viewState": {
+        "layout": 1,
+        "panes": [{ "view": "tight", "render": "rgb", "granularity": "monthly", "windowId": "2021-08" }],
+        "linkedScrub": true,
+        "showAreas": false,
+        "chart": { "visible": false, "metric": "ndvi", "emphasize": [] }
+      },
+      "say": "August 2021: the fire is in the valley. Every clear satellite pass that month saw this — the whole basin shrouded under smoke while the forest around the meadow burned. One honesty note: smoke isn't cloud, so the processing didn't mask it. This is genuinely what the sensor saw, and it's why this month's vegetation numbers carry an asterisk.",
+      "pointAt": "Nothing. Hold the frame. Then advance.",
+      "facts": [{ "text": "quarterly composites blurred this month away — monthly cadence recovered it" }]
+    },
+    {
+      "id": "t4",
+      "phase": "Refugium",
+      "viewState": {
+        "layout": 1,
+        "panes": [{ "view": "tight", "render": "rgb", "granularity": "monthly", "windowId": "2021-09" }],
+        "linkedScrub": true,
+        "showAreas": true,
+        "chart": { "visible": true, "metric": "nbr", "emphasize": ["treatment", "burned-forest"] }
+      },
+      "say": "September: the smoke clears and shows what burned — char on every hillside. And in the middle, the wet meadow core is still green. The burn-severity index confirms it: the forest's burn signal crashed and never recovered; the meadow's barely moved and healed within a year. Wet ground is where fire loses.",
+      "pointAt": "The surviving green core against the char.",
+      "facts": [
+        { "text": "meadow NBR 0.40 → 0.04 → 0.35 by 2022" },
+        { "text": "forest NBR → −0.04, still ~0.06 in 2025" }
+      ]
+    },
+    {
+      "id": "t5",
+      "phase": "Rebound",
+      "viewState": {
+        "layout": 1,
+        "panes": [{ "view": "tight", "render": "rgb", "granularity": "quarterly", "windowId": "2022-Q3" }],
+        "linkedScrub": true,
+        "showAreas": false,
+        "chart": { "visible": true, "metric": "ndvi", "emphasize": [] }
+      },
+      "say": "One growing season later, the meadow is back — regrown from rootstock the wet soil protected, nearly at pre-fire greenness. The forest can't do that: its canopy is gone for decades, and its line keeps sinking as fire-injured trees keep dying. Same fire, two fates — the difference is water in the ground. And honesty: this rebound is natural meadow resilience, not restoration. The beavers aren't here yet.",
+      "pointAt": "The chart: green rebounds to ~0.61; the amber forest line stays down and declines.",
+      "facts": [
+        { "text": "meadow NDVI 0.37 → 0.61 in one season" },
+        { "text": "forest 0.27 → 0.37, then declining" }
+      ]
+    },
+    {
+      "id": "t6",
+      "phase": "Return",
+      "viewState": {
+        "layout": 2,
+        "panes": [
+          { "view": "tight", "render": "rgb", "granularity": "quarterly", "windowId": "2025-Q3" },
+          { "view": "tight", "render": "ndvi", "granularity": "quarterly", "windowId": "2025-Q3" }
+        ],
+        "linkedScrub": true,
+        "showAreas": true,
+        "chart": { "visible": false, "metric": "ndvi", "emphasize": ["treatment"] }
+      },
+      "say": "October 18, 2023: after process-based restoration work prepared the ground, CDFW released a family of seven beavers here with the Maidu Summit Consortium — the state's first beaver conservation release in nearly 75 years. By 2025 they had built a 328-foot dam, and the meadow floor reads greener and wetter than before the fire, while the hillsides stay bare.",
+      "pointAt": "The treatment outline; the meadow's expanded green versus the still-brown uplands.",
+      "facts": [
+        { "text": "7 beavers released Oct 18, 2023", "source": "CDFW × Maidu Summit Consortium" },
+        { "text": "328-ft dam · +22% water reported", "source": "CDFW, Apr 2025" }
+      ]
+    },
+    {
+      "id": "t7",
+      "phase": "Divergence + limits",
+      "viewState": {
+        "layout": 3,
+        "panes": [
+          { "view": "tight", "render": "ndmi", "granularity": "quarterly", "windowId": "2020-Q3" },
+          { "view": "tight", "render": "ndmi", "granularity": "quarterly", "windowId": "2021-Q4" },
+          { "view": "tight", "render": "ndmi", "granularity": "quarterly", "windowId": "2025-Q3" }
+        ],
+        "linkedScrub": false,
+        "showAreas": false,
+        "chart": { "visible": true, "metric": "ndmi", "emphasize": [] }
+      },
+      "say": "The moisture render closes the story in three frames: before the fire, moisture spread across meadow and forest alike; after it, the burned flanks went bone-dry with only the meadow core holding on; by 2025 the meadow is a connected blue network — wetter than before the fire. Since the release, the beaver meadow holds the highest greenness and moisture of the three areas every year. Limits, stated plainly: the +22% water claim can't be checked at 10 m; the upper-meadow control is assumed unworked; August 2021 numbers are smoke-contaminated.",
+      "pointAt": "2020: moisture everywhere · 2021-Q4: stripped by fire · 2025: wetter than pre-fire.",
+      "facts": [
+        { "text": "meadow 0.57–0.60 vs control 0.40–0.47", "source": "summer NDVI" },
+        { "text": "wettest area all 7 years", "source": "NDMI" }
+      ]
+    }
+  ]
+}

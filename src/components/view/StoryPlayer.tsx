@@ -1,0 +1,205 @@
+"use client";
+
+import { useCallback, useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useExplore } from "@/stores/explore";
+import { getStory } from "@/lib/demo/stories";
+import { windowIndex, windowsFor } from "@/lib/demo/load";
+import type { Story } from "@/lib/demo/types";
+import FrameCanvas from "@/components/canvas/FrameCanvas";
+import ChartPanel from "@/components/canvas/ChartPanel";
+
+export default function StoryPlayer({ storyId }: { storyId: string }) {
+  const router = useRouter();
+  const [story, setStory] = useState<Story | null>(null);
+  const [missing, setMissing] = useState(false);
+  const [stepIdx, setStepIdx] = useState(0);
+  const site = useExplore((s) => s.site);
+  const scrubTimer = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Load story + its site (deferred a tick: getStory reads localStorage).
+  useEffect(() => {
+    const t = setTimeout(() => {
+      const s = getStory(storyId);
+      if (!s) {
+        setMissing(true);
+        return;
+      }
+      setStory(s);
+      useExplore.getState().loadSite(s.siteId).catch(() => setMissing(true));
+    }, 0);
+    return () => clearTimeout(t);
+  }, [storyId]);
+
+  const step = story?.steps[stepIdx];
+
+  // Apply the step's view state; run its scrub range if it has one.
+  useEffect(() => {
+    if (!step || !site) return;
+    const store = useExplore.getState();
+    store.applyViewState(step.viewState);
+    if (scrubTimer.current) clearInterval(scrubTimer.current);
+    if (step.scrub) {
+      const { paneIndex, fromId, toId } = step.scrub;
+      const windows = windowsFor(site, step.viewState.panes[paneIndex].granularity);
+      let idx = windowIndex(windows, fromId);
+      const endIdx = windowIndex(windows, toId);
+      store.setWindowByIndex(paneIndex, idx);
+      scrubTimer.current = setInterval(() => {
+        idx += 1;
+        if (idx > endIdx) {
+          if (scrubTimer.current) clearInterval(scrubTimer.current);
+          return;
+        }
+        useExplore.getState().setWindowByIndex(paneIndex, idx);
+      }, 380);
+    }
+    return () => {
+      if (scrubTimer.current) clearInterval(scrubTimer.current);
+    };
+  }, [step, site]);
+
+  const go = useCallback(
+    (delta: number) => {
+      if (!story) return;
+      setStepIdx((i) => Math.max(0, Math.min(story.steps.length - 1, i + delta)));
+    },
+    [story]
+  );
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "ArrowRight" || e.key === " ") {
+        e.preventDefault();
+        go(1);
+      }
+      if (e.key === "ArrowLeft") go(-1);
+      if (e.key === "Escape") router.push("/");
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [go, router]);
+
+  const openInExplore = () => {
+    if (!story) return;
+    useExplore.getState().setStory(story);
+    router.push(`/explore/${story.siteId}`);
+  };
+
+  if (missing)
+    return (
+      <main style={{ padding: 40 }}>
+        <p>Story not found. <Link href="/">Back home</Link></p>
+      </main>
+    );
+  if (!story || !site || !step) return null;
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden" }}>
+      <header
+        style={{
+          display: "flex",
+          alignItems: "baseline",
+          gap: 12,
+          padding: "10px 18px",
+          borderBottom: "1px solid var(--border)",
+        }}
+      >
+        <Link href="/" style={{ textDecoration: "none", fontWeight: 700, fontSize: 14 }}>
+          Slow Water
+        </Link>
+        <span style={{ fontSize: 14, fontWeight: 600 }}>{story.title}</span>
+        <span className="mono" style={{ fontSize: 11.5, color: "var(--ink-soft)" }}>
+          {site.name}
+        </span>
+        <button onClick={openInExplore} style={{ marginLeft: "auto", fontSize: 12 }}>
+          Open in explore
+        </button>
+      </header>
+
+      <main style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "14px 18px" }}>
+        <div style={{ maxWidth: 1000, margin: "0 auto", display: "flex", flexDirection: "column", gap: 12 }}>
+          <FrameCanvas editable={false} />
+          <ChartPanel editable={false} />
+        </div>
+      </main>
+
+      <footer
+        style={{
+          borderTop: "1px solid var(--border)",
+          background: "var(--panel)",
+          padding: "14px 18px 16px",
+        }}
+      >
+        <div style={{ maxWidth: 1000, margin: "0 auto", display: "flex", gap: 18, alignItems: "flex-start" }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            {step.phase && (
+              <div
+                className="mono"
+                style={{ fontSize: 10.5, letterSpacing: "0.12em", color: "var(--accent)", textTransform: "uppercase" }}
+              >
+                {step.phase}
+              </div>
+            )}
+            <p className="serif" style={{ fontSize: 16.5, lineHeight: 1.5, margin: "4px 0 6px", maxWidth: "70ch" }}>
+              {step.say}
+            </p>
+            {step.pointAt && (
+              <p style={{ fontSize: 13, color: "var(--ink-soft)", margin: "0 0 8px" }}>
+                <span style={{ color: "var(--accent)" }}>→ </span>
+                {step.pointAt}
+              </p>
+            )}
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+              {step.facts.map((f, i) => (
+                <span
+                  key={i}
+                  className="mono"
+                  style={{
+                    fontSize: 11.5,
+                    background: "var(--panel-2)",
+                    border: "1px solid var(--border)",
+                    borderRadius: 999,
+                    padding: "2px 10px",
+                  }}
+                >
+                  {f.text}
+                  {f.source && <span style={{ color: "var(--ink-soft)" }}> · {f.source}</span>}
+                </span>
+              ))}
+            </div>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, paddingTop: 6 }}>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button onClick={() => go(-1)} disabled={stepIdx === 0}>←</button>
+              <button onClick={() => go(1)} disabled={stepIdx === story.steps.length - 1} style={{ fontWeight: 600 }}>
+                Next →
+              </button>
+            </div>
+            <div style={{ display: "flex", gap: 5 }}>
+              {story.steps.map((s, i) => (
+                <button
+                  key={s.id}
+                  onClick={() => setStepIdx(i)}
+                  aria-label={`Step ${i + 1}`}
+                  style={{
+                    width: 9,
+                    height: 9,
+                    borderRadius: "50%",
+                    padding: 0,
+                    border: "none",
+                    background: i === stepIdx ? "var(--accent)" : "var(--border-strong)",
+                  }}
+                />
+              ))}
+            </div>
+            <span className="mono" style={{ fontSize: 11, color: "var(--ink-soft)" }}>
+              {stepIdx + 1} / {story.steps.length}
+            </span>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+}
