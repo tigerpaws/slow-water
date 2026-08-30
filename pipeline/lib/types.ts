@@ -1,4 +1,12 @@
 /**
+ * Pipeline-only types. Shared domain types (AnalysisArea, SiteEvent,
+ * RenderKind, MonthlyStat) live with the app in src/lib/domain.ts and are
+ * re-exported here for pipeline modules.
+ */
+export type { AnalysisArea, MonthlyStat, RenderKind, SiteEvent } from "../../src/lib/domain";
+import type { AnalysisArea, MonthlyStat, RenderKind, SiteEvent } from "../../src/lib/domain";
+
+/**
  * Site config is the generalization seam of the pipeline: a new use case is a
  * new JSON file conforming to SiteConfig, with no code changes.
  */
@@ -24,17 +32,6 @@ export interface SiteConfig {
   notes?: string;
 }
 
-export interface AnalysisArea {
-  id: string;
-  label: string;
-  kind: "treatment" | "control" | "reference";
-  /** [minLon, minLat, maxLon, maxLat] in WGS84. Provide bbox or polygon. */
-  bbox?: [number, number, number, number];
-  /** Ring of [lon, lat] vertices in WGS84 (closing edge implied). */
-  polygon?: [number, number][];
-  notes?: string;
-}
-
 export interface ViewConfig {
   /** Width of the square AOI box in meters. */
   widthMeters: number;
@@ -43,13 +40,6 @@ export interface ViewConfig {
 }
 
 export type Cadence = "seasonal" | "monthly" | "summer-monthly" | "annual-summer";
-
-export interface SiteEvent {
-  start: string;
-  end?: string;
-  label: string;
-  kind: "restoration" | "drought" | "fire" | "flood" | "other";
-}
 
 /** One time slice of the sequence. */
 export interface TimeWindow {
@@ -60,7 +50,6 @@ export interface TimeWindow {
   label: string;
 }
 
-export type RenderKind = "rgb" | "ndvi" | "ndmi";
 /** "composite" = cloud-masked median across the window; "simple" = least-cloudy mosaic. */
 export type MosaicMode = "composite" | "simple";
 
@@ -96,22 +85,6 @@ export interface WindowCoverage {
   sceneCount: number;
   minCloudCover?: number;
   bestSceneDate?: string;
-}
-
-export interface MonthlyStat {
-  from: string;
-  to: string;
-  ndviMean?: number;
-  ndviStDev?: number;
-  ndwiMean?: number;
-  /** Vegetation moisture (NDMI, B08/B11). */
-  ndmiMean?: number;
-  /** Normalized Burn Ratio (B08/B12); drops sharply after fire. */
-  nbrMean?: number;
-  /** Fraction of area pixels classified as open water (SCL water or NDWI>0). */
-  waterFraction?: number;
-  /** Fraction of AOI pixels that were valid (cloud-free, in-swath). */
-  validFraction?: number;
 }
 
 /** stats.json: per-analysis-area monthly series. */

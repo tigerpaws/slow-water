@@ -35,17 +35,19 @@ ANTHROPIC_API_KEY=sk-ant-…
 
 ## Data pipeline (offline tooling)
 
-The demo data was produced by the scripts in `scripts/` against the Sentinel Hub APIs
-(Copernicus Data Space free tier and/or the commercial service on Planet):
+The pipeline lives entirely in `pipeline/`, separate from the app; it shares only the
+domain types in `src/lib/domain.ts` and `src/lib/geo.ts`. It talks to the Sentinel Hub
+APIs (Copernicus Data Space free tier and/or the commercial service on Planet):
 
 ```
-npx tsx scripts/fetch-timelapse.ts sites/<site>.json          # frames + per-area stats
-npx tsx scripts/build-demo-data.ts                            # → public/demo (WebP, manifests)
+npx tsx pipeline/fetch-timelapse.ts pipeline/sites/<site>.json   # frames + per-area stats
+npx tsx pipeline/build-demo-data.ts                              # → public/demo (WebP, manifests)
 ```
 
-Site definitions (AOI, views, events, analysis areas) are JSON files in `sites/` — a new
-site is a new file, no code changes. Pipeline credentials go in `.env.local`
-(see `.env.example`). Raw PNG output lands in `public/timelapses/` (gitignored).
+Site definitions (AOI, views, events, analysis areas) are JSON files in
+`pipeline/sites/` — a new site is a new file, no code changes. Pipeline credentials go
+in `.env.local` (see `.env.example`). Raw PNG output lands in `pipeline/data/`
+(gitignored); `build-demo-data` bakes it into the checked-in `public/demo/`.
 
 Findings from the validation phase are in `docs/spike-findings.md`.
 

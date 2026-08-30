@@ -2,7 +2,7 @@
  * Demo-site data model: what the app consumes. Built from the pipeline's
  * output by scripts/build-demo-data.ts and checked into public/demo/.
  */
-import type { AnalysisArea, MonthlyStat, RenderKind, SiteEvent } from "../pipeline/types";
+import type { AnalysisArea, MonthlyStat, RenderKind, SiteEvent } from "../domain";
 
 export type Granularity = "quarterly" | "monthly";
 export type ViewName = "context" | "tight";

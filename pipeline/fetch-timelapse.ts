@@ -2,7 +2,7 @@
  * Fetch a satellite timelapse for a site config.
  *
  * Usage:
- *   npx tsx scripts/fetch-timelapse.ts sites/doty-ravine.json [command] [flags]
+ *   npx tsx scripts/fetch-timelapse.ts pipeline/sites/doty-ravine.json [command] [flags]
  *
  * Commands:
  *   coverage    Report scene availability per window (cheap; catalog only)
@@ -20,14 +20,14 @@
  */
 import fs from "node:fs";
 import path from "node:path";
-import { loadEnv } from "../src/lib/pipeline/env";
-import { bboxAround } from "../src/lib/pipeline/geo";
-import { buildWindows } from "../src/lib/pipeline/windows";
-import { searchScenes, coverageForWindows } from "../src/lib/pipeline/catalog";
-import { fetchFrame } from "../src/lib/pipeline/process";
-import { fetchMonthlyStats } from "../src/lib/pipeline/stats";
-import { processingUnitsSpent } from "../src/lib/pipeline/client";
-import { getProvider, type ShProvider } from "../src/lib/pipeline/providers";
+import { loadEnv } from "./lib/env";
+import { bboxAround } from "../src/lib/geo";
+import { buildWindows } from "./lib/windows";
+import { searchScenes, coverageForWindows } from "./lib/catalog";
+import { fetchFrame } from "./lib/process";
+import { fetchMonthlyStats } from "./lib/stats";
+import { processingUnitsSpent } from "./lib/client";
+import { getProvider, type ShProvider } from "./lib/providers";
 import type {
   AnalysisArea,
   Manifest,
@@ -38,7 +38,7 @@ import type {
   SiteStats,
   VariantRecord,
   WindowCoverage,
-} from "../src/lib/pipeline/types";
+} from "./lib/types";
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -61,7 +61,7 @@ function parseArgs() {
 }
 
 function outDir(site: SiteConfig): string {
-  return path.join(process.cwd(), "public", "timelapses", site.id);
+  return path.join(process.cwd(), "pipeline", "data", site.id);
 }
 
 async function reportCoverage(site: SiteConfig, provider: ShProvider): Promise<WindowCoverage[]> {

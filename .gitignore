@@ -42,4 +42,4 @@ next-env.d.ts
 !.env.example
 
 # generated satellite frames
-/public/timelapses/
+/pipeline/data/

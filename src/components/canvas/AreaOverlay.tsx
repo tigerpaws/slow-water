@@ -1,6 +1,6 @@
 "use client";
 
-import type { AnalysisArea } from "@/lib/pipeline/types";
+import type { AnalysisArea } from "@/lib/domain";
 import { AREA_COLOR_VAR } from "@/lib/demo/constants";
 
 function areaRing(area: AnalysisArea): [number, number][] {

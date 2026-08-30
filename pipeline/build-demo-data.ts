@@ -3,14 +3,14 @@
  *
  *   npx tsx scripts/build-demo-data.ts [--force]
  *
- * Reads sites/<id>.json + public/timelapses/<id>{,-monthly}/ and writes
+ * Reads sites/<id>.json + pipeline/data/<id>{,-monthly}/ and writes
  * public/demo/<id>/ with WebP frames, a merged manifest (granularity
  * dimension), stats, and a summary for the chat assistant.
  */
 import fs from "node:fs";
 import path from "node:path";
 import sharp from "sharp";
-import type { Manifest, MonthlyStat, RenderKind, SiteConfig } from "../src/lib/pipeline/types";
+import type { Manifest, MonthlyStat, RenderKind, SiteConfig } from "./lib/types";
 import type { DemoSiteManifest, DemoWindow, Granularity, SiteStats, SiteSummary } from "../src/lib/demo/types";
 
 const SITES = ["doty-ravine", "tasmam-koyom"];
@@ -19,7 +19,7 @@ const WEBP_QUALITY = 75;
 const FORCE = process.argv.includes("--force");
 
 const ROOT = process.cwd();
-const SRC = path.join(ROOT, "public", "timelapses");
+const SRC = path.join(ROOT, "pipeline", "data");
 const OUT = path.join(ROOT, "public", "demo");
 
 function readJson<T>(file: string): T {
@@ -109,7 +109,7 @@ function buildSummary(stats: SiteStats): SiteSummary {
 
 async function buildSite(siteId: string): Promise<void> {
   console.log(`\n=== ${siteId} ===`);
-  const config = readJson<SiteConfig>(path.join(ROOT, "sites", `${siteId}.json`));
+  const config = readJson<SiteConfig>(path.join(ROOT, "pipeline", "sites", `${siteId}.json`));
   const views = Object.keys(config.views);
   const granularities: DemoSiteManifest["granularities"] = {};
   let totalBytes = 0;

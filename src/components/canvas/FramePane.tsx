@@ -4,7 +4,7 @@ import { useEffect, useMemo } from "react";
 import type { DemoSiteManifest, PaneState } from "@/lib/demo/types";
 import { windowIndex, windowsFor } from "@/lib/demo/load";
 import { framePath } from "@/lib/demo/types";
-import { bboxAround } from "@/lib/pipeline/geo";
+import { bboxAround } from "@/lib/geo";
 import { useBoxSize } from "@/lib/useBoxSize";
 import AreaOverlay from "./AreaOverlay";
 

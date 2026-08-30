@@ -1,4 +1,4 @@
-import type { AnalysisArea, MonthlyStat } from "../pipeline/types";
+import type { AnalysisArea, MonthlyStat } from "../domain";
 import type { Metric } from "./types";
 
 /** Kind → CSS variable (theme-aware). */
