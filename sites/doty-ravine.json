@@ -13,10 +13,10 @@
   "analysisAreas": [
     {
       "id": "treatment",
-      "label": "Restored floodplain",
+      "label": "Restored floodplain + downstream corridor",
       "kind": "treatment",
-      "bbox": [-121.298, 38.9367, -121.2908, 38.941],
-      "notes": "The ~60-acre reconnected floodplain west of Gladding Rd (approximate footprint, inferred — replace with parcel/project boundary when available)."
+      "bbox": [-121.304, 38.9367, -121.2908, 38.941],
+      "notes": "The ~60-acre reconnected floodplain west of Gladding Rd plus the downstream corridor to the tight frame's west edge, which shows improvement over time (approximate footprint, inferred — replace with parcel/project boundary when available)."
     },
     {
       "id": "control",
@@ -26,11 +26,11 @@
       "notes": "Riparian corridor east of Gladding Rd, upstream of the floodplain work — same stream, no floodplain reconnection. Verify no PBR occurred here."
     },
     {
-      "id": "grassland",
-      "label": "Dry grassland (reference)",
+      "id": "landscape",
+      "label": "Whole landscape (reference)",
       "kind": "reference",
-      "bbox": [-121.3027, 38.9325, -121.2957, 38.9359],
-      "notes": "Non-riparian annual grassland south of the corridor; tracks the climate signal so treatment divergence from it is attributable to the water table, not weather."
+      "bbox": [-121.3034, 38.9317, -121.2846, 38.9463],
+      "notes": "Nearly the full tight-view extent — grassland, pasture, and corridor together. Tracks the overall climate/drought signal the whole landscape experienced, the baseline the treatment should diverge from."
     }
   ],
   "events": [
