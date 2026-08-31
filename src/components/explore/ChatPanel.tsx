@@ -46,7 +46,7 @@ type ClientToolCall =
   | { toolName: "remove_step"; input: AppUITools["remove_step"]["input"] }
   | { toolName: "set_story_title"; input: AppUITools["set_story_title"]["input"] };
 
-function runClientTool(call: ClientToolCall, ensureChatStory: () => void): string {
+export function runClientTool(call: ClientToolCall, ensureChatStory: () => void): string {
   const store = useExplore.getState();
   switch (call.toolName) {
     case "set_view":
@@ -67,7 +67,11 @@ function runClientTool(call: ClientToolCall, ensureChatStory: () => void): strin
         scrub: i.scrub,
       });
       store.applyViewState(viewState);
-      return `added step ${step.id} (#${store.story?.steps.length ?? 0})`;
+      // Report from FRESH state: the captured `store` predates the mutations,
+      // and a stale count here misleads the model into "duplicate id" theories.
+      const after = useExplore.getState().story;
+      const position = (after?.steps.findIndex((st) => st.id === step.id) ?? -1) + 1;
+      return `added step ${step.id} as step ${position} of ${after?.steps.length ?? 0}`;
     }
     case "update_step": {
       const { stepId, ...patch } = call.input;
