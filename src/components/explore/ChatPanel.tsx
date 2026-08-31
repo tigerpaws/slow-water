@@ -81,6 +81,18 @@ function runClientTool(call: ClientToolCall): string {
   }
 }
 
+/** Two site-specific starter prompts, shown by the input until the chat begins. */
+const SITE_SUGGESTIONS: Record<string, [string, string]> = {
+  "doty-ravine": [
+    "Show how the restored corridor held its greenness through the 2020–22 drought while the landscape dipped.",
+    "Draft a 3-step story about the downstream corridor widening since 2016, with real numbers.",
+  ],
+  "tasmam-koyom": [
+    "Show me the month the Dixie Fire burned through the valley.",
+    "How did meadow moisture change after the beaver release? Use real numbers.",
+  ],
+};
+
 const TOOL_LABELS: Record<string, string> = {
   set_view: "set the canvas",
   add_step: "added a step",
@@ -163,8 +175,6 @@ export default function ChatPanel({ siteId }: { siteId: string }) {
         {messages.length === 0 && (
           <p style={{ fontSize: 12.5, color: "var(--ink-soft)" }}>
             I can drive the canvas, pull real numbers from the site&apos;s data, and draft story steps.
-            Try: &ldquo;show the fire month&rdquo;, &ldquo;how did moisture change after the beaver release?&rdquo;,
-            or &ldquo;draft a 3-step story about drought resilience&rdquo;.
           </p>
         )}
         {messages.map((m) => (
@@ -264,6 +274,34 @@ export default function ChatPanel({ siteId }: { siteId: string }) {
         )}
         {busy && <p className="mono" style={{ fontSize: 11, color: "var(--ink-soft)" }}>thinking…</p>}
       </div>
+      {messages.length === 0 && SITE_SUGGESTIONS[siteId] && (
+        <div style={{ padding: "0 12px 10px", display: "flex", flexDirection: "column", gap: 6 }}>
+          <span className="mono" style={{ fontSize: 9.5, letterSpacing: "0.1em", color: "var(--ink-soft)" }}>
+            TRY
+          </span>
+          {SITE_SUGGESTIONS[siteId].map((prompt) => (
+            <button
+              key={prompt}
+              onClick={() => {
+                if (busy) return;
+                sendMessage({ text: prompt });
+              }}
+              style={{
+                textAlign: "left",
+                fontSize: 12,
+                lineHeight: 1.4,
+                padding: "7px 10px",
+                background: "var(--panel-2)",
+                border: "1px solid var(--border)",
+                borderRadius: 8,
+                color: "var(--ink)",
+              }}
+            >
+              {prompt}
+            </button>
+          ))}
+        </div>
+      )}
       <div style={{ padding: 12, borderTop: "1px solid var(--border)", display: "flex", gap: 6 }}>
         <textarea
           value={input}
