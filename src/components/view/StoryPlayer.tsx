@@ -27,7 +27,7 @@ export default function StoryPlayer({ storyId }: { storyId: string }) {
         return;
       }
       setStory(s);
-      useExplore.getState().loadSite(s.siteId).catch(() => setMissing(true));
+      useExplore.getState().loadSite(s.siteId, { keepStory: true }).catch(() => setMissing(true));
     }, 0);
     return () => clearTimeout(t);
   }, [storyId]);

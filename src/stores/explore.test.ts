@@ -197,15 +197,15 @@ describe("loadSite draft hygiene", () => {
     }));
   });
 
-  it("closes a draft from a different site (it stays auto-saved)", async () => {
-    s().setStory({ id: "story-a", siteId: "other-site", title: "Other", steps: [] });
+  it("closes any open draft by default (it stays auto-saved)", async () => {
+    s().setStory({ id: "story-a", siteId: "test-site", title: "Same site", steps: [] });
     await s().loadSite("test-site");
     expect(s().story).toBeNull();
   });
 
-  it("keeps a draft that belongs to the loaded site", async () => {
+  it("keeps the draft when the caller opts out (edit/view flows)", async () => {
     s().setStory({ id: "story-b", siteId: "test-site", title: "Mine", steps: [] });
-    await s().loadSite("test-site");
+    await s().loadSite("test-site", { keepStory: true });
     expect(s().story?.id).toBe("story-b");
   });
 });

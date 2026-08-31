@@ -59,7 +59,9 @@ export default function ExploreApp({
       };
       if (st.story?.id === storyId) {
         const ready =
-          st.site?.id === st.story.siteId ? Promise.resolve() : st.loadSite(st.story.siteId);
+          st.site?.id === st.story.siteId
+            ? Promise.resolve()
+            : st.loadSite(st.story.siteId, { keepStory: true });
         ready.then(selectFirst).catch((e: Error) => setError(e.message));
         return;
       }
@@ -77,7 +79,7 @@ export default function ExploreApp({
       }
       useExplore
         .getState()
-        .loadSite(found.siteId)
+        .loadSite(found.siteId, { keepStory: true })
         .then(() => {
           useExplore.getState().setStory(found);
           selectFirst();

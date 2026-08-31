@@ -19,6 +19,10 @@ import { ResizeHandle, usePanelWidth } from "@/components/PanelResize";
 /** Chat messages typed by the app's tool set — no casts at the tool boundary. */
 type AppUIMessage = UIMessage<unknown, UIDataTypes, AppUITools>;
 
+/** Set when the assistant itself navigates (into a new story's editor) so
+ * ChatDock keeps the conversation alive instead of resetting it. */
+export const chatNav = { selfInitiated: false };
+
 /** Merge a (possibly partial) chat-provided view spec onto the current canvas state. */
 function buildViewState(spec: ViewSpec | undefined): ViewState {
   const current = cloneViewState(useExplore.getState().viewState);
@@ -139,6 +143,7 @@ export default function ChatPanel() {
     };
     st.setStory(fresh);
     conversationStoryRef.current = fresh.id;
+    chatNav.selfInitiated = true;
     router.push(`/edit/${fresh.id}`);
   };
 
@@ -309,7 +314,7 @@ export default function ChatPanel() {
         )}
         {busy && <p className="mono" style={{ fontSize: 11, color: "var(--ink-soft)" }}>thinking…</p>}
       </div>
-      {messages.length === 0 && SITE_SUGGESTIONS[siteId] && (
+      {mode === "explore" && messages.length === 0 && SITE_SUGGESTIONS[siteId] && (
         <div style={{ padding: "0 12px 10px", display: "flex", flexDirection: "column", gap: 6 }}>
           <span className="mono" style={{ fontSize: 9.5, letterSpacing: "0.1em", color: "var(--ink-soft)" }}>
             TRY

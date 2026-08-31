@@ -48,7 +48,7 @@ interface ExploreStore {
   liveSync: boolean;
   setLiveSync: (on: boolean) => void;
 
-  loadSite: (siteId: string) => Promise<void>;
+  loadSite: (siteId: string, opts?: { keepStory?: boolean }) => Promise<void>;
   setLayout: (layout: 1 | 2 | 3) => void;
   setPane: (index: number, patch: Partial<PaneState>) => void;
   setActivePane: (index: number) => void;
@@ -107,13 +107,12 @@ export const useExplore = create<ExploreStore>((set, get) => ({
   liveSync: false,
   setLiveSync: (on) => set({ liveSync: on }),
 
-  loadSite: async (siteId) => {
+  loadSite: async (siteId, opts) => {
     const site = await fetchSite(siteId);
     const stats = await fetchStats(siteId);
-    // Entering a site starts in free-exploration mode: no step selected, and a
-    // draft left open from a DIFFERENT site is closed (it's auto-saved, so it
-    // stays reachable under Your Stories) — a stale cross-site draft otherwise
-    // leaks into the assistant's context and the editor.
+    // Entering a site starts clean: no step selected and no open draft (drafts
+    // are auto-saved, so they stay reachable under Your Stories). Edit/view
+    // flows pass keepStory to preserve the story they are about to manage.
     set((s) => ({
       site,
       stats,
@@ -121,7 +120,7 @@ export const useExplore = create<ExploreStore>((set, get) => ({
       activePane: 0,
       playing: false,
       selectedStepId: null,
-      story: s.story && s.story.siteId !== site.id ? null : s.story,
+      story: opts?.keepStory ? s.story : null,
     }));
   },
 
