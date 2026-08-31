@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Archivo, Source_Serif_4, IBM_Plex_Mono } from "next/font/google";
 import AppSidebar from "@/components/AppSidebar";
+import ChatDock from "@/components/ChatDock";
 import "./globals.css";
 
 const sans = Archivo({ variable: "--font-sans", subsets: ["latin"] });
@@ -18,6 +19,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body style={{ display: "flex", overflow: "hidden" }}>
         <AppSidebar />
         <div style={{ flex: 1, minWidth: 0, height: "100%" }}>{children}</div>
+        <ChatDock />
       </body>
     </html>
   );

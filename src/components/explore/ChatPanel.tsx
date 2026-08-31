@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { useChat } from "@ai-sdk/react";
 import {
   DefaultChatTransport,
@@ -55,7 +56,8 @@ function runClientTool(call: ClientToolCall, ensureChatStory: () => void): strin
       ensureChatStory();
       const i = call.input;
       const viewState = buildViewState(i.view);
-      store.applyViewState(viewState);
+      // Create the step FIRST so it becomes the selected one — applying the
+      // view before that would live-sync it into the previously selected step.
       const step = store.addStep({
         phase: i.phase,
         say: i.say,
@@ -64,6 +66,7 @@ function runClientTool(call: ClientToolCall, ensureChatStory: () => void): strin
         viewState,
         scrub: i.scrub,
       });
+      store.applyViewState(viewState);
       return `added step ${step.id} (#${store.story?.steps.length ?? 0})`;
     }
     case "update_step": {
@@ -103,13 +106,19 @@ const TOOL_LABELS: Record<string, string> = {
   query_stats: "queried the data",
 };
 
-export default function ChatPanel({ siteId, mode }: { siteId: string; mode: "explore" | "edit" }) {
+export default function ChatPanel() {
+  const pathname = usePathname();
+  const router = useRouter();
+  const mode: "explore" | "edit" = pathname.startsWith("/edit") ? "edit" : "explore";
+  const siteId = useExplore((s) => s.site?.id) ?? "";
   const [input, setInput] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
   const [panelWidth, setPanelWidth] = usePanelWidth("slowwater:chat-width", 330, 260, 600);
   // In explore, the first story-affecting tool call of a conversation starts a
-  // FRESH story for this site (never appends to some other open story); the
-  // rest of the conversation continues it. In edit, work on the open story.
+  // FRESH story for this site (never appends to some other open story) and
+  // moves the user into its editor; the conversation survives the navigation
+  // because this panel is mounted at the layout level. In edit, work on the
+  // open story.
   const conversationStoryRef = useRef<string | null>(null);
   const ensureChatStory = () => {
     const st = useExplore.getState();
@@ -126,6 +135,7 @@ export default function ChatPanel({ siteId, mode }: { siteId: string; mode: "exp
     };
     st.setStory(fresh);
     conversationStoryRef.current = fresh.id;
+    router.push(`/edit/${fresh.id}`);
   };
 
   const { messages, sendMessage, status, addToolOutput, clearError, error } = useChat<AppUIMessage>({

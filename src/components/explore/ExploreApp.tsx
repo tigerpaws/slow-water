@@ -8,7 +8,6 @@ import { getStory, isDemoStory } from "@/lib/demo/stories";
 import FrameCanvas from "@/components/canvas/FrameCanvas";
 import TimePanel from "@/components/canvas/TimePanel";
 import StepEditor from "./StepEditor";
-import ChatPanel from "./ChatPanel";
 
 /**
  * The shared canvas screen in two modes: "explore" browses a site (nothing is
@@ -165,7 +164,6 @@ export default function ExploreApp({
           </div>
         )}
       </main>
-      <ChatPanel siteId={site?.id ?? siteId ?? ""} mode={mode} />
     </div>
   );
 }
