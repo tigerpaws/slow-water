@@ -148,7 +148,7 @@ export default function ChatPanel() {
             messages,
             siteId,
             canvas: s.viewState,
-            storyDraft: s.story
+            storyDraft: s.story && s.story.siteId === s.site?.id
               ? {
                   title: s.story.title,
                   steps: s.story.steps.map((st, i) => ({

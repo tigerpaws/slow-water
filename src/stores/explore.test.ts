@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useExplore } from "./explore";
 import { freshViewState, testSite } from "@/test/fixtures";
 
@@ -185,5 +185,27 @@ describe("scrub-range remapping on granularity change", () => {
     s().updateStep(step.id, { scrub: { paneIndex: 1, fromId: "2020-Q2", toId: "2020-Q4" } });
     s().setPane(0, { granularity: "monthly" });
     expect(s().story!.steps[0].scrub).toEqual({ paneIndex: 1, fromId: "2020-Q2", toId: "2020-Q4" });
+  });
+});
+
+describe("loadSite draft hygiene", () => {
+  beforeEach(() => {
+    reset();
+    vi.stubGlobal("fetch", async (url: string) => ({
+      ok: String(url).includes("manifest"),
+      json: async () => testSite,
+    }));
+  });
+
+  it("closes a draft from a different site (it stays auto-saved)", async () => {
+    s().setStory({ id: "story-a", siteId: "other-site", title: "Other", steps: [] });
+    await s().loadSite("test-site");
+    expect(s().story).toBeNull();
+  });
+
+  it("keeps a draft that belongs to the loaded site", async () => {
+    s().setStory({ id: "story-b", siteId: "test-site", title: "Mine", steps: [] });
+    await s().loadSite("test-site");
+    expect(s().story?.id).toBe("story-b");
   });
 });

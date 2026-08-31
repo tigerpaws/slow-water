@@ -110,8 +110,19 @@ export const useExplore = create<ExploreStore>((set, get) => ({
   loadSite: async (siteId) => {
     const site = await fetchSite(siteId);
     const stats = await fetchStats(siteId);
-    // Entering a site starts in free-exploration mode: no step selected.
-    set({ site, stats, viewState: defaultViewState(site), activePane: 0, playing: false, selectedStepId: null });
+    // Entering a site starts in free-exploration mode: no step selected, and a
+    // draft left open from a DIFFERENT site is closed (it's auto-saved, so it
+    // stays reachable under Your Stories) — a stale cross-site draft otherwise
+    // leaks into the assistant's context and the editor.
+    set((s) => ({
+      site,
+      stats,
+      viewState: defaultViewState(site),
+      activePane: 0,
+      playing: false,
+      selectedStepId: null,
+      story: s.story && s.story.siteId !== site.id ? null : s.story,
+    }));
   },
 
   setLayout: (layout) =>
