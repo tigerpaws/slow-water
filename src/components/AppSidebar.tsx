@@ -3,13 +3,12 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useExplore } from "@/stores/explore";
+import { useExplore, newId } from "@/stores/explore";
 import { DEMO_SITES, windowIndex, windowsFor } from "@/lib/demo/load";
 import {
   DEMO_STORIES,
   STORIES_CHANGED_EVENT,
   exportStory,
-  isStorySaved,
   listSavedStories,
   saveStory,
 } from "@/lib/demo/stories";
@@ -72,24 +71,20 @@ export default function AppSidebar() {
   const [sidebarWidth, setSidebarWidth] = usePanelWidth("slowwater:sidebar-width", 220, 170, 420);
   const editingStoryId = pathname.startsWith("/edit/") ? decodeURIComponent(pathname.split("/")[2] ?? "") : null;
   const showRail = !!editingStoryId && !!story && story.id === editingStoryId;
-  const [savedFlash, setSavedFlash] = useState(false);
 
-  const handleSaveClick = () => {
-    const s = useExplore.getState().story;
-    if (!s) return;
-    saveStory(s);
-    setSavedFlash(true);
-    setTimeout(() => setSavedFlash(false), 1500);
-  };
-
+  // Auto-save makes closing safe: anything with a step is already persisted.
   const handleClose = () => {
-    const s = useExplore.getState().story;
-    if (s && s.steps.length > 0 && !isStorySaved(s)) {
-      if (!window.confirm("Close this story? Unsaved changes will be lost.")) return;
-    }
-    const siteId = s?.siteId;
+    const siteId = useExplore.getState().story?.siteId;
     setStory(null);
     if (pathname.startsWith("/edit/")) router.push(siteId ? `/explore/${siteId}` : "/");
+  };
+
+  const handleNewStory = () => {
+    const st = useExplore.getState();
+    if (!st.site) return;
+    const fresh: Story = { id: newId("story"), siteId: st.site.id, title: "Untitled story", steps: [] };
+    st.setStory(fresh);
+    router.push(`/edit/${fresh.id}`);
   };
 
   const [saved, setSaved] = useState<Story[]>([]);
@@ -138,9 +133,20 @@ export default function AppSidebar() {
         </NavLink>
       ))}
 
-      {(saved.length > 0 || (showRail && story)) && (
+      {(saved.length > 0 || (showRail && story) || !!site) && (
         <>
-          <SectionLabel>YOUR STORIES</SectionLabel>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+            <SectionLabel>YOUR STORIES</SectionLabel>
+            {site && (
+              <button
+                onClick={handleNewStory}
+                title={`New story on ${site.name}`}
+                style={{ marginLeft: "auto", padding: "0 7px", fontSize: 11, lineHeight: "18px" }}
+              >
+                + New
+              </button>
+            )}
+          </div>
           {showRail && story && !saved.some((s) => s.id === story.id) && (
             <NavLink href={`/edit/${story.id}`} active>
               {story.title} <span style={{ color: "var(--ink-soft)", fontWeight: 400 }}>· unsaved</span>
@@ -262,10 +268,7 @@ export default function AppSidebar() {
               No steps yet — set up the canvas and capture, or ask the assistant.
             </div>
           )}
-          <div style={{ display: "flex", gap: 5, flexWrap: "wrap", marginTop: 8 }}>
-            <button style={{ fontSize: 12 }} onClick={handleSaveClick}>
-              {savedFlash ? "Saved ✓" : "Save"}
-            </button>
+          <div style={{ display: "flex", gap: 5, flexWrap: "wrap", alignItems: "center", marginTop: 8 }}>
             <button style={{ fontSize: 12 }} onClick={handlePlay} disabled={story.steps.length === 0}>
               Play ▸
             </button>
@@ -275,6 +278,9 @@ export default function AppSidebar() {
             <button style={{ fontSize: 12 }} onClick={handleClose}>
               Close
             </button>
+            <span className="mono" style={{ fontSize: 9.5, color: "var(--ink-soft)", marginLeft: "auto" }}>
+              autosaves
+            </span>
           </div>
         </>
       )}

@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useExplore } from "@/stores/explore";
 import { windowIndex, windowsFor } from "@/lib/demo/load";
 import { METRICS } from "@/lib/demo/constants";
@@ -54,66 +53,18 @@ function recipeLine(site: DemoSiteManifest, step: StoryStep): string {
   return parts.join(" · ");
 }
 
-/** Capture bar, or — when editing with a step selected — the step recipe
- * card. The live-edit rule: while a step is selected in edit mode, everything
- * on the canvas IS the step; all changes save to it immediately. */
-export default function StepEditor({ mode }: { mode: "explore" | "edit" }) {
-  const router = useRouter();
+/** Edit-mode capture bar and — when a step is selected — the step recipe
+ * card. The live-edit rule: while a step is selected, everything on the
+ * canvas IS the step; all changes save to it immediately (and auto-persist). */
+export default function StepEditor() {
   const site = useExplore((s) => s.site);
   const story = useExplore((s) => s.story);
   const selectedStepId = useExplore((s) => s.selectedStepId);
-  const { captureStep, updateStep, removeStep, duplicateStep, selectStep, ensureStory } = useExplore.getState();
-  const step = mode === "edit" ? story?.steps.find((st) => st.id === selectedStepId) : undefined;
+  const { captureStep, updateStep, removeStep, duplicateStep, selectStep } = useExplore.getState();
+  const step = story?.steps.find((st) => st.id === selectedStepId);
   const stepIndex = story?.steps.findIndex((st) => st.id === selectedStepId) ?? -1;
 
   if (!site) return null;
-
-  // Explore is for the site: capturing or starting a story moves into edit mode.
-  if (mode === "explore") {
-    const goEdit = () => {
-      const s = useExplore.getState().story;
-      if (s) router.push(`/edit/${s.id}`);
-    };
-    return (
-      <div
-        style={{
-          background: "var(--panel)",
-          border: "1px solid var(--border)",
-          borderRadius: 10,
-          padding: 10,
-          display: "flex",
-          gap: 8,
-          alignItems: "center",
-          flexWrap: "wrap",
-        }}
-      >
-        <button
-          onClick={() => {
-            captureStep();
-            goEdit();
-          }}
-          style={{ fontWeight: 600 }}
-        >
-          + Capture step
-        </button>
-        {story ? (
-          <button onClick={goEdit}>Continue editing “{story.title}” ▸</button>
-        ) : (
-          <button
-            onClick={() => {
-              ensureStory();
-              goEdit();
-            }}
-          >
-            New story
-          </button>
-        )}
-        <span style={{ fontSize: 12, color: "var(--ink-soft)" }}>
-          capturing opens the story editor — or ask the assistant to draft steps
-        </span>
-      </div>
-    );
-  }
 
   const scrubPaneIdx = step?.scrub?.paneIndex ?? 0;
   const scrubPane = step?.viewState.panes[scrubPaneIdx] ?? step?.viewState.panes[0];

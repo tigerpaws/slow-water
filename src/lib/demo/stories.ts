@@ -40,7 +40,14 @@ export function listSavedStories(): Story[] {
   return Object.values(readSaved());
 }
 
+/** Auto-save filter: skip empty untitled drafts so they don't litter the list. */
+export function shouldAutosave(story: Story): boolean {
+  if (isDemoStory(story.id)) return false;
+  return story.steps.length > 0 || (story.title.trim() !== "" && story.title !== "Untitled story");
+}
+
 export function saveStory(story: Story): void {
+  if (isDemoStory(story.id)) return; // demo stories are read-only
   try {
     const all = readSaved();
     all[story.id] = story;

@@ -10,8 +10,8 @@ import {
   type UIDataTypes,
   type UIMessage,
 } from "ai";
-import { useExplore, cloneViewState } from "@/stores/explore";
-import type { ViewState } from "@/lib/demo/types";
+import { useExplore, cloneViewState, newId } from "@/stores/explore";
+import type { Story, ViewState } from "@/lib/demo/types";
 import type { AppUITools, ViewSpec } from "@/lib/chat/schemas";
 import { ResizeHandle, usePanelWidth } from "@/components/PanelResize";
 
@@ -45,13 +45,14 @@ type ClientToolCall =
   | { toolName: "remove_step"; input: AppUITools["remove_step"]["input"] }
   | { toolName: "set_story_title"; input: AppUITools["set_story_title"]["input"] };
 
-function runClientTool(call: ClientToolCall): string {
+function runClientTool(call: ClientToolCall, ensureChatStory: () => void): string {
   const store = useExplore.getState();
   switch (call.toolName) {
     case "set_view":
       store.applyViewState(buildViewState(call.input));
       return "view applied";
     case "add_step": {
+      ensureChatStory();
       const i = call.input;
       const viewState = buildViewState(i.view);
       store.applyViewState(viewState);
@@ -75,7 +76,7 @@ function runClientTool(call: ClientToolCall): string {
       store.removeStep(call.input.stepId);
       return `removed ${call.input.stepId}`;
     case "set_story_title":
-      store.ensureStory();
+      ensureChatStory();
       store.setStoryMeta({ title: call.input.title });
       return `title set to "${call.input.title}"`;
   }
@@ -102,10 +103,30 @@ const TOOL_LABELS: Record<string, string> = {
   query_stats: "queried the data",
 };
 
-export default function ChatPanel({ siteId }: { siteId: string }) {
+export default function ChatPanel({ siteId, mode }: { siteId: string; mode: "explore" | "edit" }) {
   const [input, setInput] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
   const [panelWidth, setPanelWidth] = usePanelWidth("slowwater:chat-width", 330, 260, 600);
+  // In explore, the first story-affecting tool call of a conversation starts a
+  // FRESH story for this site (never appends to some other open story); the
+  // rest of the conversation continues it. In edit, work on the open story.
+  const conversationStoryRef = useRef<string | null>(null);
+  const ensureChatStory = () => {
+    const st = useExplore.getState();
+    if (mode === "edit") {
+      st.ensureStory();
+      return;
+    }
+    if (conversationStoryRef.current && st.story?.id === conversationStoryRef.current) return;
+    const fresh: Story = {
+      id: newId("story"),
+      siteId: st.site?.id ?? siteId,
+      title: "Untitled story",
+      steps: [],
+    };
+    st.setStory(fresh);
+    conversationStoryRef.current = fresh.id;
+  };
 
   const { messages, sendMessage, status, addToolOutput, clearError, error } = useChat<AppUIMessage>({
     transport: new DefaultChatTransport<AppUIMessage>({
@@ -136,7 +157,7 @@ export default function ChatPanel({ siteId }: { siteId: string }) {
     onToolCall: ({ toolCall }) => {
       if (toolCall.dynamic) return;
       if (toolCall.toolName === "query_stats") return; // server-executed
-      const output = runClientTool(toolCall);
+      const output = runClientTool(toolCall, ensureChatStory);
       addToolOutput({ tool: toolCall.toolName, toolCallId: toolCall.toolCallId, output });
     },
   });

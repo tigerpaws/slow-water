@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { saveStory, shouldAutosave } from "@/lib/demo/stories";
 import type {
   DemoSiteManifest,
   Granularity,
@@ -301,3 +302,18 @@ export const useExplore = create<ExploreStore>((set, get) => ({
   setStoryMeta: (patch) =>
     set((s) => (s.story ? { story: { ...s.story, ...patch } } : {})),
 }));
+
+// Auto-save: every meaningful story change persists (debounced) — there is no
+// Save button. Empty untitled drafts are filtered by shouldAutosave.
+if (typeof window !== "undefined") {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  let lastSeen: Story | null = null;
+  useExplore.subscribe((s) => {
+    if (s.story === lastSeen) return;
+    lastSeen = s.story;
+    const snapshot = s.story;
+    if (!snapshot || !shouldAutosave(snapshot)) return;
+    clearTimeout(timer);
+    timer = setTimeout(() => saveStory(snapshot), 500);
+  });
+}

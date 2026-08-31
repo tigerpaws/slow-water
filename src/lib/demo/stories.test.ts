@@ -74,3 +74,16 @@ describe("saved-story validation", () => {
     }
   });
 });
+
+describe("shouldAutosave", () => {
+  it("skips empty untitled drafts, saves titled or stepped stories, never demos", () => {
+    const empty = makeStory("story-x");
+    empty.title = "Untitled story";
+    expect(stories.shouldAutosave(empty)).toBe(false);
+    expect(stories.shouldAutosave({ ...empty, title: "Named" })).toBe(true);
+    expect(
+      stories.shouldAutosave({ ...empty, steps: [{ id: "s1" }] as never })
+    ).toBe(true);
+    expect(stories.shouldAutosave({ ...empty, id: stories.DEMO_STORIES[0].id, title: "x" })).toBe(false);
+  });
+});

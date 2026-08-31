@@ -161,11 +161,11 @@ export default function ExploreApp({
               <FrameCanvas editable />
               <TimePanel editable range={scrubRange} />
             </div>
-            <StepEditor mode={mode} />
+            {mode === "edit" && <StepEditor />}
           </div>
         )}
       </main>
-      <ChatPanel siteId={site?.id ?? siteId ?? ""} />
+      <ChatPanel siteId={site?.id ?? siteId ?? ""} mode={mode} />
     </div>
   );
 }
