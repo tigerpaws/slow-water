@@ -13,6 +13,7 @@ import {
 import { useExplore, cloneViewState } from "@/stores/explore";
 import type { ViewState } from "@/lib/demo/types";
 import type { AppUITools, ViewSpec } from "@/lib/chat/schemas";
+import { ResizeHandle, usePanelWidth } from "@/components/PanelResize";
 
 /** Chat messages typed by the app's tool set — no casts at the tool boundary. */
 type AppUIMessage = UIMessage<unknown, UIDataTypes, AppUITools>;
@@ -92,6 +93,7 @@ const TOOL_LABELS: Record<string, string> = {
 export default function ChatPanel({ siteId }: { siteId: string }) {
   const [input, setInput] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [panelWidth, setPanelWidth] = usePanelWidth("slowwater:chat-width", 330, 260, 600);
 
   const { messages, sendMessage, status, addToolOutput, clearError, error } = useChat<AppUIMessage>({
     transport: new DefaultChatTransport<AppUIMessage>({
@@ -138,14 +140,17 @@ export default function ChatPanel({ siteId }: { siteId: string }) {
   };
 
   return (
+    <>
+    <ResizeHandle width={panelWidth} setWidth={setPanelWidth} grows="left" label="Resize assistant panel" />
     <aside
       style={{
-        width: 330,
+        width: panelWidth,
         flexShrink: 0,
         borderLeft: "1px solid var(--border)",
         background: "var(--panel)",
         display: "flex",
         flexDirection: "column",
+        boxSizing: "border-box",
       }}
     >
       <div
@@ -288,5 +293,6 @@ export default function ChatPanel({ siteId }: { siteId: string }) {
         </button>
       </div>
     </aside>
+    </>
   );
 }

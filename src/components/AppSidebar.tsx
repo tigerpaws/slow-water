@@ -15,6 +15,7 @@ import {
 } from "@/lib/demo/stories";
 import { framePath } from "@/lib/demo/types";
 import type { DemoSiteManifest, Story, StoryStep } from "@/lib/demo/types";
+import { ResizeHandle, usePanelWidth } from "@/components/PanelResize";
 
 /** Short mono recipe for a step row: view · render · window (+panes, ▸range). */
 function stepRecipe(site: DemoSiteManifest, step: StoryStep): string {
@@ -68,6 +69,7 @@ export default function AppSidebar() {
   const site = useExplore((s) => s.site);
   const selectedStepId = useExplore((s) => s.selectedStepId);
   const { selectStep, moveStep, setStory, setStoryMeta } = useExplore.getState();
+  const [sidebarWidth, setSidebarWidth] = usePanelWidth("slowwater:sidebar-width", 220, 170, 420);
   const editingStoryId = pathname.startsWith("/edit/") ? decodeURIComponent(pathname.split("/")[2] ?? "") : null;
   const showRail = !!editingStoryId && !!story && story.id === editingStoryId;
   const [savedFlash, setSavedFlash] = useState(false);
@@ -111,14 +113,16 @@ export default function AppSidebar() {
   };
 
   return (
+    <>
     <aside
       style={{
-        width: 220,
+        width: sidebarWidth,
         flexShrink: 0,
         borderRight: "1px solid var(--border)",
         background: "var(--panel)",
         padding: "14px 14px 24px",
         overflowY: "auto",
+        boxSizing: "border-box",
       }}
     >
       <Link href="/" style={{ textDecoration: "none", fontWeight: 700, fontSize: 15 }}>
@@ -275,5 +279,7 @@ export default function AppSidebar() {
         </>
       )}
     </aside>
+    <ResizeHandle width={sidebarWidth} setWidth={setSidebarWidth} grows="right" label="Resize navigation sidebar" />
+    </>
   );
 }
