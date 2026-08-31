@@ -38,9 +38,19 @@ export default function Home() {
       <div style={{ maxWidth: 880, margin: "0 auto", padding: "48px 20px 96px" }}>
       <h1 style={{ fontSize: 34, margin: 0, letterSpacing: "-0.01em" }}>Slow Water</h1>
       <p className="serif" style={{ fontSize: 16.5, color: "var(--ink-soft)", maxWidth: "62ch", marginTop: 8 }}>
-        Environmental change, seen from orbit. Explore a decade of satellite imagery over two
-        California stream-restoration sites, compare the worked land against its neighbors,
-        and assemble the evidence into a story anyone can walk through.
+        A tool for turning satellite archives into environmental evidence. When restoration
+        work slows water down — beaver dams, reconnected floodplains — the land holds
+        moisture longer, stays green deeper into the dry season, and shrugs off drought and
+        fire in ways a decade of imagery can actually show. Slow Water pairs that imagery
+        with the numbers to back what your eyes see, over two California stream-restoration
+        sites where beavers are doing the engineering.
+      </p>
+      <p className="serif" style={{ fontSize: 14.5, color: "var(--ink-soft)", maxWidth: "62ch", marginTop: 10 }}>
+        <strong style={{ color: "var(--ink)" }}>Watch</strong> a guided story, step by step.{" "}
+        <strong style={{ color: "var(--ink)" }}>Explore</strong> a site yourself — scrub through
+        time, compare views side by side, chart the analysis areas.{" "}
+        <strong style={{ color: "var(--ink)" }}>Author</strong> your own story with an assistant
+        that drives the canvas and cites real measurements, never invented ones.
       </p>
 
       <SectionLabel>WATCH A STORY</SectionLabel>
@@ -104,9 +114,96 @@ export default function Home() {
         </>
       )}
 
+      <SectionLabel>THE DATA</SectionLabel>
+      <p className="serif" style={{ fontSize: 14.5, color: "var(--ink)", maxWidth: "66ch", margin: "0 0 12px" }}>
+        Every frame is a cloud-masked median composite of ESA Sentinel-2 scenes (10&nbsp;m per
+        pixel), built offline through the Sentinel Hub APIs and served here as a static
+        archive. Each site comes at two zooms — a wide context view and a view tight on the
+        worked reach — in three renders: true color, NDVI for greenness, and NDMI for
+        moisture. Alongside the imagery, monthly statistics are computed over three
+        hand-drawn analysis areas per site — the restoration treatment, a control, and a
+        reference — so every claim in a story can point at a number.
+      </p>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 12 }}>
+        <div style={{ ...cardStyle, cursor: "default" }}>
+          <div style={{ fontWeight: 650, fontSize: 14.5 }}>Doty Ravine</div>
+          <div className="mono" style={{ fontSize: 11.5, color: "var(--ink-soft)", marginTop: 6, lineHeight: 1.7 }}>
+            Sierra foothills · Placer County, CA
+            <br />2016 – 2025 · 40 quarterly + 117 monthly composites
+            <br />2 zooms × 3 renders · ~5 km &amp; 1.8 km views
+          </div>
+        </div>
+        <div style={{ ...cardStyle, cursor: "default" }}>
+          <div style={{ fontWeight: 650, fontSize: 14.5 }}>Tásmam Koyóm</div>
+          <div className="mono" style={{ fontSize: 11.5, color: "var(--ink-soft)", marginTop: 6, lineHeight: 1.7 }}>
+            Humbug Valley · Plumas County, CA
+            <br />2019 – 2025 · 28 quarterly + 84 monthly composites
+            <br />2 zooms × 3 renders · 6 km &amp; 2.2 km views
+          </div>
+        </div>
+      </div>
+      <p style={{ fontSize: 12.5, color: "var(--ink-soft)", marginTop: 10, maxWidth: "66ch" }}>
+        1,614 frames and roughly 600 area-months of NDVI, NDMI, and NBR statistics in all.
+        This prototype ships with these two sites baked in; the full app would fetch imagery
+        for any location and time range on demand.
+      </p>
+
+      <SectionLabel>GLOSSARY</SectionLabel>
+      <dl
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))",
+          gap: "14px 28px",
+          margin: 0,
+        }}
+      >
+        {[
+          [
+            "Sentinel-2",
+            "ESA's twin imaging satellites: free 10 m-per-pixel imagery of everywhere on Earth, every ~5 days, since 2015.",
+          ],
+          [
+            "Composite",
+            "One image per time window, built by stacking every usable satellite pass and taking the per-pixel median with clouds masked out — the weather removed, the season kept.",
+          ],
+          [
+            "NDVI · greenness",
+            "A vegetation index computed from red and near-infrared light: how much living plant matter a pixel holds, from ~0 (bare ground) to ~0.9 (dense canopy).",
+          ],
+          [
+            "NDMI · moisture",
+            "A water index from near- and shortwave-infrared light: moisture held in soil and vegetation. Blue in the renders means wet ground — the beaver signal.",
+          ],
+          [
+            "NBR · burn ratio",
+            "An index that collapses when vegetation burns and recovers with the canopy — a gauge of fire severity and of how recovery is going.",
+          ],
+          [
+            "Treatment / control / reference",
+            "The compared analysis areas: where the restoration happened; a similar reach where it didn't; and a baseline area that tracks the climate alone. Divergence between their lines is the evidence.",
+          ],
+          [
+            "Granularity",
+            "How finely time is sliced: quarterly composites for decade-scale trends, monthly ones for dated events like a fire or a beaver release.",
+          ],
+          [
+            "Process-based restoration",
+            "Restoring a stream by restoring its processes — slowing water, reconnecting floodplains — often with beaver dam analogues (BDAs): human-built starter dams that real beavers take over.",
+          ],
+        ].map(([term, def]) => (
+          <div key={term}>
+            <dt style={{ fontWeight: 650, fontSize: 13.5 }}>{term}</dt>
+            <dd className="serif" style={{ fontSize: 13.5, color: "var(--ink-soft)", margin: "3px 0 0" }}>
+              {def}
+            </dd>
+          </div>
+        ))}
+      </dl>
+
       <p style={{ fontSize: 12, color: "var(--ink-soft)", marginTop: 48 }}>
-        Prototype — two demo sites with Sentinel-2 imagery (ESA Copernicus), processed via Sentinel Hub.
-        The full app would fetch any location on demand.
+        Prototype. Imagery: Copernicus Sentinel-2 data, processed via Sentinel Hub.
+        Restoration context: Placer Land Trust, Maidu Summit Consortium, CDFW, and USFWS
+        published materials.
       </p>
       </div>
     </main>
