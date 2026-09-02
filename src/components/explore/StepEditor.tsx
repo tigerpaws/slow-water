@@ -94,7 +94,7 @@ export default function StepEditor() {
       {!step && (
         <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
           <button onClick={() => captureStep()} style={{ fontWeight: 600 }}>
-            + Capture step
+            + New step
           </button>
           <span style={{ fontSize: 12, color: "var(--ink-soft)" }}>
             adds a step from the current canvas — or select a step in the sidebar to edit it
@@ -115,8 +115,8 @@ export default function StepEditor() {
               canvas changes save to this step as you make them
             </span>
             <div style={{ display: "flex", gap: 5, marginLeft: "auto" }}>
-              <button style={{ fontSize: 12 }} onClick={() => captureStep()}>
-                + Capture next
+              <button style={{ fontSize: 12 }} onClick={() => captureStep()} title="Add a new step after this one, from the current canvas">
+                + New step
               </button>
               <button style={{ fontSize: 12 }} onClick={() => duplicateStep(step.id)}>
                 Duplicate

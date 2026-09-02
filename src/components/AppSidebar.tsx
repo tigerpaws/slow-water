@@ -8,7 +8,7 @@ import { DEMO_SITES, windowIndex, windowsFor } from "@/lib/demo/load";
 import {
   DEMO_STORIES,
   STORIES_CHANGED_EVENT,
-  exportStory,
+  deleteStory,
   listSavedStories,
   saveStory,
 } from "@/lib/demo/stories";
@@ -81,10 +81,19 @@ export default function AppSidebar() {
 
   const handleNewStory = () => {
     const st = useExplore.getState();
-    if (!st.site) return;
-    const fresh: Story = { id: newId("story"), siteId: st.site.id, title: "Untitled story", steps: [] };
+    const siteId = st.site?.id ?? DEMO_SITES[0].id;
+    const fresh: Story = { id: newId("story"), siteId, title: "Untitled story", steps: [] };
     st.setStory(fresh);
     router.push(`/edit/${fresh.id}`);
+  };
+
+  const handleDelete = () => {
+    const s = useExplore.getState().story;
+    if (!s) return;
+    if (!window.confirm(`Delete "${s.title}"? This can't be undone.`)) return;
+    deleteStory(s.id);
+    setStory(null);
+    router.push(`/explore/${s.siteId}`);
   };
 
   const [saved, setSaved] = useState<Story[]>([]);
@@ -133,35 +142,34 @@ export default function AppSidebar() {
         </NavLink>
       ))}
 
-      {(saved.length > 0 || (showRail && story) || !!site) && (
-        <>
-          <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
-            <SectionLabel>YOUR STORIES</SectionLabel>
-            {site && (
-              <button
-                onClick={handleNewStory}
-                title={`New story on ${site.name}`}
-                style={{ marginLeft: "auto", padding: "0 7px", fontSize: 11, lineHeight: "18px" }}
-              >
-                + New
-              </button>
-            )}
-          </div>
-          {showRail && story && !saved.some((s) => s.id === story.id) && (
-            <NavLink href={`/edit/${story.id}`} active>
-              {story.title} <span style={{ color: "var(--ink-soft)", fontWeight: 400 }}>· unsaved</span>
-            </NavLink>
-          )}
-          {saved.map((s) => (
-            <NavLink
-              key={s.id}
-              href={`/view/${s.id}`}
-              active={pathname === `/view/${s.id}` || editingStoryId === s.id}
-            >
-              {editingStoryId === s.id && story ? story.title : s.title}
-            </NavLink>
-          ))}
-        </>
+      <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+        <SectionLabel>YOUR STORIES</SectionLabel>
+        <button
+          onClick={handleNewStory}
+          title={`New story on ${site ? site.name : DEMO_SITES[0].label}`}
+          style={{ marginLeft: "auto", padding: "0 7px", fontSize: 11, lineHeight: "18px" }}
+        >
+          + New
+        </button>
+      </div>
+      {showRail && story && !saved.some((s) => s.id === story.id) && (
+        <NavLink href={`/edit/${story.id}`} active>
+          {story.title} <span style={{ color: "var(--ink-soft)", fontWeight: 400 }}>· unsaved</span>
+        </NavLink>
+      )}
+      {saved.map((s) => (
+        <NavLink
+          key={s.id}
+          href={`/view/${s.id}`}
+          active={pathname === `/view/${s.id}` || editingStoryId === s.id}
+        >
+          {editingStoryId === s.id && story ? story.title : s.title}
+        </NavLink>
+      ))}
+      {saved.length === 0 && !(showRail && story) && (
+        <div style={{ fontSize: 11.5, color: "var(--ink-soft)", padding: "2px 8px", lineHeight: 1.4 }}>
+          None yet — start one with + New.
+        </div>
       )}
 
       <SectionLabel>SITES</SectionLabel>
@@ -272,11 +280,15 @@ export default function AppSidebar() {
             <button style={{ fontSize: 12 }} onClick={handlePlay} disabled={story.steps.length === 0}>
               Play ▸
             </button>
-            <button style={{ fontSize: 12 }} onClick={() => exportStory(story)}>
-              Export
-            </button>
             <button style={{ fontSize: 12 }} onClick={handleClose}>
               Close
+            </button>
+            <button
+              style={{ fontSize: 12, color: "var(--fire)", borderColor: "var(--fire)" }}
+              onClick={handleDelete}
+              title="Delete this story permanently"
+            >
+              Delete
             </button>
             <span className="mono" style={{ fontSize: 9.5, color: "var(--ink-soft)", marginLeft: "auto" }}>
               autosaves

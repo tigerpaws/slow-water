@@ -62,7 +62,7 @@ export function defaultViewState(site: DemoSiteManifest): ViewState {
     layout: 1,
     panes: [pane],
     linkedScrub: true,
-    showAreas: false,
+    showAreas: true,
     chart: { visible: true, metric: "ndvi", emphasize: [] },
   };
 }

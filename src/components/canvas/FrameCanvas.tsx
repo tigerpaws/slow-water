@@ -2,6 +2,35 @@
 
 import { useExplore } from "@/stores/explore";
 import FramePane from "./FramePane";
+import ControlGroup from "./ControlGroup";
+
+function GroupButton({
+  selected,
+  title,
+  onClick,
+  children,
+}: {
+  selected: boolean;
+  title: string;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      className={selected ? "selected" : undefined}
+      title={title}
+      onClick={onClick}
+      style={{
+        padding: "2px 9px",
+        fontSize: 12,
+        borderRadius: 6,
+        ...(selected ? {} : { background: "transparent", borderColor: "transparent" }),
+      }}
+    >
+      {children}
+    </button>
+  );
+}
 
 /** The multi-pane frame area. Time control lives in TimePanel. */
 export default function FrameCanvas({ editable }: { editable: boolean }) {
@@ -16,32 +45,44 @@ export default function FrameCanvas({ editable }: { editable: boolean }) {
     <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", gap: 8 }}>
       {editable && (
         <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-          <span className="mono" style={{ fontSize: 11, color: "var(--ink-soft)", letterSpacing: "0.06em" }}>
-            LAYOUT
-          </span>
-          {([1, 2, 3] as const).map((n) => (
-            <button
-              key={n}
-              className={viewState.layout === n ? "selected" : undefined}
-              onClick={() => setLayout(n)}
-              style={{ padding: "3px 10px" }}
+          <ControlGroup label="LAYOUT">
+            {([1, 2, 3] as const).map((n) => (
+              <GroupButton
+                key={n}
+                selected={viewState.layout === n}
+                title={n === 1 ? "One frame" : `${n} frames side by side, each with its own controls`}
+                onClick={() => setLayout(n)}
+              >
+                {n === 1 ? "single" : n === 2 ? "2-up" : "3-up"}
+              </GroupButton>
+            ))}
+          </ControlGroup>
+          <ControlGroup label="OVERLAYS">
+            <GroupButton
+              selected={viewState.showAreas}
+              title="Outline the analysis areas on the frames — treatment, control, reference"
+              onClick={toggleAreas}
             >
-              {n === 1 ? "single" : n === 2 ? "2-up" : "3-up"}
-            </button>
-          ))}
-          <button className={viewState.showAreas ? "selected" : undefined} onClick={toggleAreas}>
-            areas
-          </button>
-          <button
-            className={viewState.chart.visible ? "selected" : undefined}
-            onClick={() => useExplore.getState().setChart({ visible: !viewState.chart.visible })}
-          >
-            chart
-          </button>
+              areas
+            </GroupButton>
+            <GroupButton
+              selected={viewState.chart.visible}
+              title="Show the measurement chart below the frames"
+              onClick={() => useExplore.getState().setChart({ visible: !viewState.chart.visible })}
+            >
+              chart
+            </GroupButton>
+          </ControlGroup>
           {viewState.layout > 1 && (
-            <button className={viewState.linkedScrub ? "selected" : undefined} onClick={toggleLinked}>
-              linked scrub
-            </button>
+            <ControlGroup label="SCRUB">
+              <GroupButton
+                selected={viewState.linkedScrub}
+                title="Move all panes through time together"
+                onClick={toggleLinked}
+              >
+                linked
+              </GroupButton>
+            </ControlGroup>
           )}
         </div>
       )}

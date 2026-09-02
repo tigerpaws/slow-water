@@ -8,6 +8,15 @@ export const AREA_COLOR_VAR: Record<AnalysisArea["kind"], string> = {
   reference: "var(--reference)",
 };
 
+/** Kind → fixed bright color for drawing OVER imagery. The theme vars are
+ * muted in light mode, but the backdrop here is always the image, so the
+ * overlay needs the same bright palette in both themes. */
+export const AREA_COLOR_OVERLAY: Record<AnalysisArea["kind"], string> = {
+  treatment: "#8fe09c",
+  control: "#9cc9f5",
+  reference: "#f5c46e",
+};
+
 export const EVENT_FILL: Record<string, string> = {
   restoration: "rgba(90, 170, 110, 0.16)",
   drought: "rgba(210, 150, 60, 0.16)",

@@ -1,7 +1,7 @@
 "use client";
 
 import type { AnalysisArea } from "@/lib/domain";
-import { AREA_COLOR_VAR } from "@/lib/demo/constants";
+import { AREA_COLOR_OVERLAY } from "@/lib/demo/constants";
 
 function areaRing(area: AnalysisArea): [number, number][] {
   if (area.polygon) return area.polygon;
@@ -43,17 +43,28 @@ export default function AreaOverlay({
         {areas.map((area) => {
           const ring = areaRing(area);
           if (!ring.length) return null;
+          const points = ring.map(([lon, lat]) => `${px(lon).toFixed(2)},${py(lat).toFixed(2)}`).join(" ");
+          // A dark casing under each colored dash keeps the outline visible
+          // whether the imagery behind it is bright (NDVI) or dark (RGB).
           return (
-            <polygon
-              key={area.id}
-              points={ring.map(([lon, lat]) => `${px(lon).toFixed(2)},${py(lat).toFixed(2)}`).join(" ")}
-              fill="none"
-              stroke={AREA_COLOR_VAR[area.kind]}
-              strokeWidth={2}
-              strokeDasharray="7 5"
-              opacity={strength(area.id)}
-              vectorEffect="non-scaling-stroke"
-            />
+            <g key={area.id} opacity={strength(area.id)}>
+              <polygon
+                points={points}
+                fill="none"
+                stroke="rgba(0,0,0,0.65)"
+                strokeWidth={5}
+                strokeDasharray="8 6"
+                vectorEffect="non-scaling-stroke"
+              />
+              <polygon
+                points={points}
+                fill="none"
+                stroke={AREA_COLOR_OVERLAY[area.kind]}
+                strokeWidth={2.5}
+                strokeDasharray="8 6"
+                vectorEffect="non-scaling-stroke"
+              />
+            </g>
           );
         })}
       </svg>
@@ -71,10 +82,11 @@ export default function AreaOverlay({
               position: "absolute",
               left: `${Math.max(left, 0)}%`,
               top: `${Math.max(top, 0)}%`,
-              background: "rgba(0,0,0,0.55)",
-              color: AREA_COLOR_VAR[area.kind],
-              fontSize: 10.5,
-              padding: "1px 6px",
+              background: "rgba(0,0,0,0.72)",
+              color: AREA_COLOR_OVERLAY[area.kind],
+              fontSize: 11,
+              fontWeight: 500,
+              padding: "1px 7px",
               borderRadius: 4,
               whiteSpace: "nowrap",
               opacity: strength(area.id),

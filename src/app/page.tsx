@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { DEMO_SITES } from "@/lib/demo/load";
-import { DEMO_STORIES, deleteStory, listSavedStories } from "@/lib/demo/stories";
+import { DEMO_STORIES, listSavedStories } from "@/lib/demo/stories";
 import type { Story } from "@/lib/demo/types";
 
 const cardStyle: React.CSSProperties = {
@@ -99,15 +99,6 @@ export default function Home() {
                 <span className="mono" style={{ fontSize: 11, color: "var(--ink-soft)" }}>
                   {s.steps.length} steps · {s.siteId}
                 </span>
-                <button
-                  style={{ fontSize: 11.5 }}
-                  onClick={() => {
-                    deleteStory(s.id);
-                    setSaved(listSavedStories());
-                  }}
-                >
-                  delete
-                </button>
               </div>
             ))}
           </div>

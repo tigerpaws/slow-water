@@ -7,26 +7,49 @@ import { framePath } from "@/lib/demo/types";
 import { bboxAround } from "@/lib/geo";
 import { useBoxSize } from "@/lib/useBoxSize";
 import AreaOverlay from "./AreaOverlay";
+import ControlGroup from "./ControlGroup";
 
 const RENDERS = ["rgb", "ndvi", "ndmi"] as const;
-const GRANULARITIES = ["quarterly", "monthly"] as const;
+const GRANULARITIES = ["monthly", "quarterly"] as const;
+
+const ZOOM_TITLES: Record<string, string> = {
+  context: "Zoom out — the site in its landscape",
+  tight: "Zoom in — tight on the restoration reach",
+};
+const RENDER_TITLES: Record<string, string> = {
+  rgb: "True color — the scene as a camera would see it",
+  ndvi: "NDVI — vegetation: brighter green means more living plants",
+  ndmi: "NDMI — moisture: blue means water held in soil and vegetation",
+};
+const GRAN_TITLES: Record<string, string> = {
+  monthly: "One composite per month — resolves single events",
+  quarterly: "One composite per season — best for decade-scale trends",
+};
 
 function ControlRow({
   options,
   value,
+  titles,
   onChange,
 }: {
   options: readonly string[];
   value: string;
+  titles?: Record<string, string>;
   onChange: (v: string) => void;
 }) {
   return (
-    <div style={{ display: "flex", gap: 4 }}>
+    <>
       {options.map((opt) => (
         <button
           key={opt}
           className={value === opt ? "selected" : undefined}
-          style={{ padding: "2px 8px", fontSize: 12, borderRadius: 6 }}
+          title={titles?.[opt]}
+          style={{
+            padding: "2px 8px",
+            fontSize: 12,
+            borderRadius: 6,
+            ...(value === opt ? {} : { background: "transparent", borderColor: "transparent" }),
+          }}
           onClick={(e) => {
             e.stopPropagation();
             onChange(opt);
@@ -35,7 +58,7 @@ function ControlRow({
           {opt}
         </button>
       ))}
-    </div>
+    </>
   );
 }
 
@@ -93,10 +116,16 @@ export default function FramePane({
       }}
     >
       {editable && (
-        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center", justifyContent: "center" }}>
-          <ControlRow options={Object.keys(site.views)} value={pane.view} onChange={(v) => onChange({ view: v as PaneState["view"] })} />
-          <ControlRow options={RENDERS} value={pane.render} onChange={(v) => onChange({ render: v as PaneState["render"] })} />
-          <ControlRow options={GRANULARITIES} value={pane.granularity} onChange={(v) => onChange({ granularity: v as PaneState["granularity"] })} />
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", justifyContent: "center" }}>
+          <ControlGroup label="ZOOM">
+            <ControlRow options={Object.keys(site.views)} value={pane.view} titles={ZOOM_TITLES} onChange={(v) => onChange({ view: v as PaneState["view"] })} />
+          </ControlGroup>
+          <ControlGroup label="IMAGE">
+            <ControlRow options={RENDERS} value={pane.render} titles={RENDER_TITLES} onChange={(v) => onChange({ render: v as PaneState["render"] })} />
+          </ControlGroup>
+          <ControlGroup label="TIME">
+            <ControlRow options={GRANULARITIES} value={pane.granularity} titles={GRAN_TITLES} onChange={(v) => onChange({ granularity: v as PaneState["granularity"] })} />
+          </ControlGroup>
         </div>
       )}
       {/* Frames are square; size the wrapper to the largest square that fits so

@@ -97,7 +97,7 @@ export const useExplore = create<ExploreStore>((set, get) => ({
     layout: 1,
     panes: [{ view: "context", render: "rgb", granularity: "quarterly", windowId: "" }],
     linkedScrub: true,
-    showAreas: false,
+    showAreas: true,
     chart: { visible: true, metric: "ndvi", emphasize: [] },
   },
   activePane: 0,
