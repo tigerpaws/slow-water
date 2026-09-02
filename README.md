@@ -58,8 +58,9 @@ key is identity-linked) as environment variables.
 
 On the deployed site the chat assistant — the one route that spends API credit — sits
 behind a shared password: set `SITE_PASSWORD` as an environment variable (enforced by
-`src/proxy.ts`, collected once by the chat panel; with it unset, deployed chat fails
-closed). The rest of the site is open, and local dev is fully ungated.
+`src/proxy.ts`, collected once by the chat panel). A production server refuses to start
+without it (`src/instrumentation.ts`). The rest of the site is open, and local dev is
+fully ungated.
 
 ## Tests
 

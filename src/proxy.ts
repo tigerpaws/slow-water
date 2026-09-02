@@ -5,7 +5,8 @@ import type { NextRequest } from "next/server";
 // API credit. The rest of the site stays open. This is not real security:
 // one shared password, sent as a header over HTTPS, for a short-lived demo.
 // The password lives only in the SITE_PASSWORD env var (never in the repo);
-// if it's unset, the deployed chat fails closed.
+// src/instrumentation.ts refuses to start a production server without it,
+// and if this still runs unset, the chat fails closed as a backstop.
 const PASSWORD = process.env.SITE_PASSWORD;
 
 export function proxy(request: NextRequest) {
