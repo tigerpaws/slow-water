@@ -53,7 +53,13 @@ Findings from the validation phase are in `docs/spike-findings.md`.
 
 ## Deploy
 
-Standard Next.js on Vercel; set `ANTHROPIC_API_KEY` as an environment variable.
+Standard Next.js on Vercel; set `ANTHROPIC_API_KEY` (and `ANTHROPIC_WORKSPACE_ID` if the
+key is identity-linked) as environment variables.
+
+On the deployed site the chat assistant — the one route that spends API credit — sits
+behind a shared password (`this-is-fine-1984`, overridable via a `SITE_PASSWORD` env
+var; enforced by `src/proxy.ts`, collected once by the chat panel). The rest of the
+site is open, and local dev is fully ungated.
 
 ## Tests
 

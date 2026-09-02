@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useChat } from "@ai-sdk/react";
 import {
@@ -22,6 +22,19 @@ type AppUIMessage = UIMessage<unknown, UIDataTypes, AppUITools>;
 /** Set when the assistant itself navigates (into a new story's editor) so
  * ChatDock keeps the conversation alive instead of resetting it. */
 export const chatNav = { selfInitiated: false };
+
+// The deployed site gates /api/chat behind a shared password (src/proxy.ts);
+// the panel collects it once and sends it with every request. Dev is ungated.
+const CHAT_GATED = process.env.NODE_ENV === "production";
+const PASSWORD_KEY = "slowwater:chat-password";
+
+function readStoredPassword(): string | null {
+  try {
+    return window.localStorage.getItem(PASSWORD_KEY);
+  } catch {
+    return null;
+  }
+}
 
 /** Merge a (possibly partial) chat-provided view spec onto the current canvas state. */
 function buildViewState(spec: ViewSpec | undefined): ViewState {
@@ -120,7 +133,16 @@ export default function ChatPanel() {
   const mode: "explore" | "edit" = pathname.startsWith("/edit") ? "edit" : "explore";
   const siteId = useExplore((s) => s.site?.id) ?? "";
   const [input, setInput] = useState("");
+  const [password, setPassword] = useState<string | null>(null);
+  const [pwInput, setPwInput] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
+  const locked = CHAT_GATED && !password;
+
+  // Deferred: localStorage isn't there during SSR/hydration.
+  useEffect(() => {
+    const t = setTimeout(() => setPassword(readStoredPassword()), 0);
+    return () => clearTimeout(t);
+  }, []);
   const [panelWidth, setPanelWidth] = usePanelWidth("slowwater:chat-width", 330, 260, 600);
   // In explore, the first story-affecting tool call of a conversation starts a
   // FRESH story for this site (never appends to some other open story) and
@@ -153,6 +175,7 @@ export default function ChatPanel() {
       prepareSendMessagesRequest: ({ messages }) => {
         const s = useExplore.getState();
         return {
+          headers: { "x-site-password": readStoredPassword() ?? "" },
           body: {
             messages,
             siteId,
@@ -173,6 +196,17 @@ export default function ChatPanel() {
       },
     }),
     sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
+    onError: (err) => {
+      // A rejected password re-locks the panel so the prompt comes back.
+      if (err.message.includes("Password required")) {
+        try {
+          window.localStorage.removeItem(PASSWORD_KEY);
+        } catch {
+          /* ignore */
+        }
+        setPassword(null);
+      }
+    },
     onToolCall: ({ toolCall }) => {
       if (toolCall.dynamic) return;
       if (toolCall.toolName === "query_stats") return; // server-executed
@@ -189,6 +223,19 @@ export default function ChatPanel() {
     setInput("");
     sendMessage({ text });
     setTimeout(() => scrollRef.current?.scrollTo({ top: 1e6 }), 50);
+  };
+
+  const unlock = () => {
+    const value = pwInput.trim();
+    if (!value) return;
+    try {
+      window.localStorage.setItem(PASSWORD_KEY, value);
+    } catch {
+      /* storage unavailable — the header below still works this session */
+    }
+    setPassword(value);
+    setPwInput("");
+    clearError();
   };
 
   return (
@@ -306,15 +353,17 @@ export default function ChatPanel() {
         ))}
         {error && (
           <p style={{ fontSize: 12, color: "var(--fire)" }}>
-            {error.message.includes("API key") || error.message.includes("401")
-              ? "Chat needs ANTHROPIC_API_KEY in .env.local."
-              : `Error: ${error.message}`}
+            {error.message.includes("Password required")
+              ? "That password wasn't accepted — try again below."
+              : error.message.includes("API key")
+                ? "Chat needs ANTHROPIC_API_KEY in .env.local."
+                : `Error: ${error.message}`}
             <button style={{ marginLeft: 6, fontSize: 11 }} onClick={clearError}>dismiss</button>
           </p>
         )}
         {busy && <p className="mono" style={{ fontSize: 11, color: "var(--ink-soft)" }}>thinking…</p>}
       </div>
-      {mode === "explore" && messages.length === 0 && SITE_SUGGESTIONS[siteId] && (
+      {mode === "explore" && !locked && messages.length === 0 && SITE_SUGGESTIONS[siteId] && (
         <div style={{ padding: "0 12px 10px", display: "flex", flexDirection: "column", gap: 6 }}>
           <span className="mono" style={{ fontSize: 9.5, letterSpacing: "0.1em", color: "var(--ink-soft)" }}>
             TRY
@@ -342,6 +391,47 @@ export default function ChatPanel() {
           ))}
         </div>
       )}
+      {locked && (
+        <div
+          style={{
+            padding: 12,
+            borderTop: "1px solid var(--border)",
+            display: "flex",
+            flexDirection: "column",
+            gap: 6,
+          }}
+        >
+          <span style={{ fontSize: 12, color: "var(--ink-soft)" }}>
+            The assistant is password-protected on this demo site.
+          </span>
+          <div style={{ display: "flex", gap: 6 }}>
+            <input
+              type="password"
+              value={pwInput}
+              onChange={(e) => setPwInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") unlock();
+              }}
+              placeholder="Password"
+              aria-label="Assistant password"
+              style={{
+                flex: 1,
+                fontSize: 13,
+                fontFamily: "inherit",
+                padding: "6px 9px",
+                border: "1px solid var(--border)",
+                borderRadius: 8,
+                background: "var(--bg)",
+                color: "var(--ink)",
+              }}
+            />
+            <button onClick={unlock} disabled={!pwInput.trim()}>
+              Unlock
+            </button>
+          </div>
+        </div>
+      )}
+      {!locked && (
       <div style={{ padding: 12, borderTop: "1px solid var(--border)", display: "flex", gap: 6 }}>
         <textarea
           value={input}
@@ -370,6 +460,7 @@ export default function ChatPanel() {
           Send
         </button>
       </div>
+      )}
     </aside>
     </>
   );
