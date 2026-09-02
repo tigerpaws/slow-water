@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useExplore, newId } from "@/stores/explore";
-import { DEMO_SITES, windowIndex, windowsFor } from "@/lib/demo/load";
+import { DEMO_SITES, fetchSite, windowIndex, windowsFor } from "@/lib/demo/load";
+import { preloadSiteFrames } from "@/lib/demo/preload";
 import {
   DEMO_STORIES,
   STORIES_CHANGED_EVENT,
@@ -95,6 +96,20 @@ export default function AppSidebar() {
     setStory(null);
     router.push(`/explore/${s.siteId}`);
   };
+
+  // Background-warm every frame of both demo sites from the first page load,
+  // so scrubs and render/zoom switches never pop in. Low priority, once per
+  // session; a site opened directly starts its own preload sooner (loadSite).
+  useEffect(() => {
+    const t = setTimeout(() => {
+      for (const { id } of DEMO_SITES) {
+        fetchSite(id)
+          .then((site) => preloadSiteFrames(site, 0))
+          .catch(() => {});
+      }
+    }, 2500);
+    return () => clearTimeout(t);
+  }, []);
 
   const [saved, setSaved] = useState<Story[]>([]);
   useEffect(() => {

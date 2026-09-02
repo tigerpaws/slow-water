@@ -18,6 +18,7 @@ import {
   windowMidDate,
   windowsFor,
 } from "@/lib/demo/load";
+import { preloadSiteFrames } from "@/lib/demo/preload";
 
 let stepCounter = 0;
 export function newId(prefix: string): string {
@@ -110,6 +111,7 @@ export const useExplore = create<ExploreStore>((set, get) => ({
   loadSite: async (siteId, opts) => {
     const site = await fetchSite(siteId);
     const stats = await fetchStats(siteId);
+    preloadSiteFrames(site);
     // Entering a site starts clean: no step selected and no open draft (drafts
     // are auto-saved, so they stay reachable under Your Stories). Edit/view
     // flows pass keepStory to preserve the story they are about to manage.
